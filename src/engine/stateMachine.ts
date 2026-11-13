@@ -20,6 +20,9 @@ export interface TransitionRequest {
     authorisedReason?: AuthorisedAlternativeReason;
     clinicalEvidenceRef?: string;
     closureNote: string;
+    requesterId?: string;
+    requesterName?: string;
+    requesterRole?: UserRole;
   };
   metadata?: Record<string, unknown>;
   timestamp?: string; // ISO string, defaults to now
@@ -138,6 +141,13 @@ export function validateTransition(currentCase: Case, request: TransitionRequest
           reason: 'AUTHORISED_ALTERNATIVE requires an explanatory closureNote (minimum 5 characters).',
         };
       }
+      // Requester and authoriser must be different users
+      if (closureDetails.requesterId && closureDetails.requesterId === request.actorId) {
+        return {
+          valid: false,
+          reason: 'Authorised alternative closure requires that the requester and authoriser be different users.',
+        };
+      }
     } else {
       return {
         valid: false,
@@ -231,6 +241,9 @@ export function transitionCase(currentCase: Case, request: TransitionRequest): T
       authoriserId: request.actorId,
       authoriserName: request.actorName || `User-${request.actorId}`,
       authoriserRole: request.actorRole,
+      requesterId: request.closureDetails.requesterId || null,
+      requesterName: request.closureDetails.requesterName || null,
+      requesterRole: request.closureDetails.requesterRole || null,
       clinicalEvidenceRef: request.closureDetails.clinicalEvidenceRef || null,
       closureNote: request.closureDetails.closureNote,
       closedAt: now,
@@ -243,8 +256,8 @@ export function transitionCase(currentCase: Case, request: TransitionRequest): T
     currentState: request.targetState,
     milestones: updatedMilestones,
     closure,
-    primaryOwnerId: request.actorId || currentCase.primaryOwnerId,
-    primaryOwnerRole: request.actorRole || currentCase.primaryOwnerRole,
+    primaryOwnerId: currentCase.primaryOwnerId || request.actorId,
+    primaryOwnerRole: currentCase.primaryOwnerRole || request.actorRole,
     updatedAt: now,
   };
 

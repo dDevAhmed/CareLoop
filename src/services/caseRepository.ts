@@ -9,10 +9,13 @@ import {
   Appointment,
   AuditLogEntry,
   AiApprovalQueueItem,
+  ConsultMessage,
+  DiagnosticReport,
   UserRole,
 } from '../types';
 import { createAuditLogEntry, GENESIS_HASH } from '../engine/auditChain';
 import { generateSyntheticDataset } from '../scripts/seed';
+import { getCurrentDemoTime, getWallClockTime } from './demoClock';
 
 export interface DatabaseStore {
   patients: Map<string, Patient>;
@@ -21,6 +24,8 @@ export interface DatabaseStore {
   outreachAttempts: OutreachAttempt[];
   referrals: Map<string, Referral>;
   appointments: Map<string, Appointment>;
+  consultMessages: Map<string, ConsultMessage[]>;
+  diagnosticReports: Map<string, DiagnosticReport>;
   auditLogs: AuditLogEntry[];
   aiQueue: Map<string, AiApprovalQueueItem>;
   lastAuditHash: string;
@@ -114,6 +119,8 @@ function loadPackData(packId: string): DatabaseStore {
     outreachAttempts: [...rawData.outreachAttempts],
     referrals: referralsMap,
     appointments: appointmentsMap,
+    consultMessages: new Map<string, ConsultMessage[]>(),
+    diagnosticReports: new Map<string, DiagnosticReport>(),
     auditLogs: [...rawData.auditLogs],
     aiQueue: aiQueueMap,
     lastAuditHash: lastHash,
@@ -135,7 +142,7 @@ export function logAuditEvent(
   actorId: string,
   actorRole: UserRole,
   action: string,
-  resourceType: 'Case' | 'Patient' | 'Referral' | 'Appointment' | 'OutreachAttempt' | 'AiApprovalQueue',
+  resourceType: 'Case' | 'Patient' | 'Referral' | 'Appointment' | 'OutreachAttempt' | 'AiApprovalQueue' | 'ConsultMessage' | 'Consent' | 'DemoClock',
   resourceId: string,
   details: Record<string, unknown>,
   packId?: string
@@ -150,6 +157,8 @@ export function logAuditEvent(
     resourceId,
     details,
     prevHash: currentStore.lastAuditHash,
+    timestamp: getCurrentDemoTime(),
+    realTimestamp: getWallClockTime(),
   });
 
   currentStore.lastAuditHash = entry.hash;

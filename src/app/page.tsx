@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Case,
   CaseState,
@@ -13,6 +14,7 @@ import {
   OutreachChannel,
   OutreachOutcome,
   JurisdictionPack,
+  ConsultMessage,
 } from '@/types';
 
 // Translation dictionary
@@ -22,10 +24,11 @@ const I18N: Record<string, any> = {
     appSubtitle: 'Closed-Loop Screening-to-Care Platform | Abu Dhabi Innovation Challenge',
     syntheticBanner: 'PROTOTYPE DEMONSTRATION: Synthetic data only. No real patient data. Not approved for clinical diagnosis.',
     tabCases: 'Active Cases & Outreach',
+    tabNavigatorWorklist: 'Navigator Worklist',
     tabAnalytics: 'Analytics & Attrition',
     tabImport: 'CSV Batch Import',
     tabAiQueue: 'AI Approval Queue',
-    tabProvenance: 'Data Sources & Audit Chain',
+    tabProvenance: 'Audit Trail & Provenance',
     filterPathway: 'Pathway',
     allPathways: 'All Pathways',
     filterUrgency: 'Urgency',
@@ -54,16 +57,26 @@ const I18N: Record<string, any> = {
     overdueBadge: 'OVERDUE',
     unassignedBadge: 'UNASSIGNED',
     generateAiDraft: 'Generate Bilingual AI Draft',
+    patientPwaBtn: '📱 Open Patient PWA Companion',
+    demoClockTitle: 'DEMO CLOCK SIMULATION',
+    advance1Day: '+1 Day',
+    advance3Days: '+3 Days',
+    advance7Days: '+7 Days',
+    advance14Days: '+14 Days',
+    advance30Days: '+30 Days',
+    resetClock: 'Reset Clock',
+    clockAdvancedToast: 'Advanced engine clock. SLAs recomputed across all active cases.',
   },
   ar: {
     appTitle: 'كير لوب (CareLoop)',
     appSubtitle: 'منصة المتابعة المغلقة من الفحص إلى الرعاية | تحدي الابتكار الصحي في أبوظبي',
     syntheticBanner: 'نموذج تجريبي: بيانات اصطناعية بالكامل. خالية من أي بيانات مرضى حقيقية. غير مخصصة للتشخيص السريري المباشر.',
     tabCases: 'الحالات النشطة والتواصل',
+    tabNavigatorWorklist: 'قائمة مهام المنسق الصحي',
     tabAnalytics: 'التحليلات ومعدلات الانقطاع',
     tabImport: 'استيراد الدفعات (CSV)',
     tabAiQueue: 'قائمة مراجعة الذكاء الاصطناعي',
-    tabProvenance: 'مصادر البيانات وسلسلة التدقيق',
+    tabProvenance: 'سلسلة التدقيق ومصادر البيانات',
     filterPathway: 'المسار الصحي',
     allPathways: 'جميع المسارات',
     filterUrgency: 'درجة الاستعجال',
@@ -92,18 +105,36 @@ const I18N: Record<string, any> = {
     overdueBadge: 'متأخر عن الموعد',
     unassignedBadge: 'غير مسند',
     generateAiDraft: 'إنشاء مسودة بالذكاء الاصطناعي',
+    patientPwaBtn: '📱 تطبيق المريض التفاعلي (PWA)',
+    demoClockTitle: 'محاكي الساعة التجريبية للمنظومة',
+    advance1Day: '+1 يوم',
+    advance3Days: '+3 أيام',
+    advance7Days: '+7 أيام',
+    advance14Days: '+14 يوماً',
+    advance30Days: '+30 يوماً',
+    resetClock: 'إعادة ضبط الساعة',
+    clockAdvancedToast: 'تم تقديم الساعة وإعادة احتساب اتفاقيات مستوى الخدمة لجميع الحالات.',
   },
 };
 
 export default function CareLoopDashboard() {
   const [lang, setLang] = useState<Language>('en');
   const [activeRole, setActiveRole] = useState<UserRole>('NAVIGATOR');
-  const [activeTab, setActiveTab] = useState<'cases' | 'analytics' | 'import' | 'aiQueue' | 'provenance'>('cases');
+  const [activeTab, setActiveTab] = useState<'cases' | 'navigatorWorklist' | 'analytics' | 'import' | 'aiQueue' | 'provenance'>('cases');
 
   // Jurisdiction Pack state
   const [packs, setPacks] = useState<JurisdictionPack[]>([]);
   const [activePackId, setActivePackIdState] = useState<string>('abu-dhabi');
   const [activePack, setActivePack] = useState<JurisdictionPack | null>(null);
+
+  // Demo Clock state
+  const [demoClockState, setDemoClockState] = useState<{
+    simulatedNow: string;
+    realNow: string;
+    offsetDays: number;
+    isAdvanced: boolean;
+  } | null>(null);
+  const [clockToast, setClockToast] = useState<string | null>(null);
 
   // Case Filter state
   const [selectedPathway, setSelectedPathway] = useState<string>('all');
@@ -119,9 +150,40 @@ export default function CareLoopDashboard() {
   const [metricsSummary, setMetricsSummary] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Selected Case for Modal
+  // Navigator Worklist state
+  const [worklistTasks, setWorklistTasks] = useState<any[]>([]);
+  const [worklistLoading, setWorklistLoading] = useState<boolean>(false);
+
+  // Selected Case for Detail Drawer
   const [selectedCaseDetail, setSelectedCaseDetail] = useState<any | null>(null);
   const [detailLoading, setDetailLoading] = useState<boolean>(false);
+  const [activeModalTab, setActiveModalTab] = useState<'overview' | 'actions' | 'consult' | 'timeline'>('overview');
+
+  // Case Actions State
+  const [assigneeId, setAssigneeId] = useState<string>('CLINICIAN-01');
+  const [assigneeName, setAssigneeName] = useState<string>('Dr. Fatima Al-Zahra');
+  const [assigneeRole, setAssigneeRole] = useState<UserRole>('CLINICIAN');
+
+  // Referral Action State
+  const [referralFacility, setReferralFacility] = useState<string>('Central Endoscopy & Diagnostic Center');
+  const [referralSpecialty, setReferralSpecialty] = useState<string>('Diagnostic Gastroenterology');
+  const [referralSummary, setReferralSummary] = useState<string>('Positive screening result requires confirmatory diagnostic colonoscopy.');
+  const [referralError, setReferralError] = useState<string | null>(null);
+  const [referralSuccess, setReferralSuccess] = useState<string | null>(null);
+
+  // Facility Action (Accept/Reject)
+  const [facilityActionType, setFacilityActionType] = useState<'ACCEPT' | 'REJECT'>('ACCEPT');
+  const [facilityRejectionReason, setFacilityRejectionReason] = useState<string>('CLINICAL_CAPACITY_EXCEEDED');
+
+  // Appointment & Attendance
+  const [appointmentDate, setAppointmentDate] = useState<string>('2026-09-01T09:00:00Z');
+  const [appointmentFacility, setAppointmentFacility] = useState<string>('Central Diagnostic Hospital - Suite 4B');
+
+  // Diagnostic Report Upload
+  const [diagnosticProcedure, setDiagnosticProcedure] = useState<string>('Colonoscopy with Polypectomy');
+  const [diagnosticFindings, setDiagnosticFindings] = useState<string>('12mm sessile polyp identified in sigmoid colon. Complete snare polypectomy performed with clear margins.');
+  const [diagnosticDisposition, setDiagnosticDisposition] = useState<string>('TUBULAR_ADENOMA_EXCISED_SURVEILLANCE_3YR');
+  const [specimenId, setSpecimenId] = useState<string>('PATH-2026-SIG-8819');
 
   // Transition form modal
   const [transitionTarget, setTransitionTarget] = useState<CaseState | ''>('');
@@ -130,6 +192,11 @@ export default function CareLoopDashboard() {
   const [clinicalEvidenceRef, setClinicalEvidenceRef] = useState<string>('COLONOSCOPY-REPORT-DOH-2026');
   const [closureNote, setClosureNote] = useState<string>('Diagnostic endoscopy completed and documented.');
   const [transitionError, setTransitionError] = useState<string | null>(null);
+
+  // Consult Message Form
+  const [consultScope, setConsultScope] = useState<'PATIENT_TO_CLINICIAN' | 'CLINICIAN_TO_CLINICIAN'>('CLINICIAN_TO_CLINICIAN');
+  const [consultText, setConsultText] = useState<string>('');
+  const [consultSending, setConsultSending] = useState<boolean>(false);
 
   // Outreach attempt form
   const [outreachChannel, setOutreachChannel] = useState<OutreachChannel>('SMS');
@@ -152,14 +219,16 @@ export default function CareLoopDashboard() {
   const [aiGenerating, setAiGenerating] = useState<boolean>(false);
 
   // Audit chain verification
-  const [auditVerificationResult, setAuditVerificationResult] = useState<any>(null);
+  const [auditData, setAuditData] = useState<any>(null);
+  const [auditLoading, setAuditLoading] = useState<boolean>(false);
 
   const t = I18N[lang] || I18N.en;
   const isRtl = lang === 'ar';
 
-  // Load packs on mount
+  // Load packs & clock on mount
   useEffect(() => {
     fetchPacks();
+    fetchDemoClock();
   }, []);
 
   async function fetchPacks() {
@@ -175,6 +244,63 @@ export default function CareLoopDashboard() {
       }
     } catch (err) {
       console.error('Failed to load packs', err);
+    }
+  }
+
+  async function fetchDemoClock() {
+    try {
+      const res = await fetch('/api/demo-clock');
+      const data = await res.json();
+      if (data.success) {
+        setDemoClockState(data.clock);
+      }
+    } catch (err) {
+      console.error('Failed to fetch demo clock', err);
+    }
+  }
+
+  async function handleAdvanceClock(days: number) {
+    try {
+      const res = await fetch('/api/demo-clock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ advanceDays: days }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDemoClockState(data.clock);
+        const toast = `Clock advanced by +${days} days. ${data.casesUpdated} cases updated; ${data.newlyOverdueCases} newly overdue cases auto-escalated to triage lead.`;
+        setClockToast(toast);
+        setTimeout(() => setClockToast(null), 6000);
+        fetchCases();
+        if (selectedCaseDetail) {
+          fetchCaseDetail(selectedCaseDetail.case.id);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to advance clock', err);
+    }
+  }
+
+  async function handleResetClock() {
+    try {
+      const res = await fetch('/api/demo-clock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reset: true }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDemoClockState(data.clock);
+        setClockToast('Demo clock reset to real-time synchronization.');
+        setTimeout(() => setClockToast(null), 4000);
+        fetchCases();
+        if (selectedCaseDetail) {
+          fetchCaseDetail(selectedCaseDetail.case.id);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to reset clock', err);
     }
   }
 
@@ -208,18 +334,17 @@ export default function CareLoopDashboard() {
         setSelectedPathway('all');
         setPage(1);
 
-        // Language check: if active lang is not in the new pack, switch to default
         const packLangs = data.pack.languages.map((l: any) => l.code);
         if (!packLangs.includes(lang)) {
           setLang(data.pack.defaultLanguage as Language);
         }
 
         updateCsvTemplate(data.pack);
-
-        // Re-fetch cases & analytics
         fetchCases(newPackId, 'all');
         if (activeTab === 'analytics') {
           fetchAnalytics(newPackId, 'all');
+        } else if (activeTab === 'navigatorWorklist') {
+          fetchNavigatorWorklist(newPackId);
         }
       }
     } catch (err) {
@@ -232,12 +357,16 @@ export default function CareLoopDashboard() {
     fetchCases();
   }, [selectedPathway, selectedState, selectedUrgency, overdueOnly, searchQuery, page, activePackId]);
 
-  // Fetch Analytics when tab is active
+  // Tab change reactions
   useEffect(() => {
     if (activeTab === 'analytics') {
       fetchAnalytics();
     } else if (activeTab === 'aiQueue') {
       fetchAiQueue();
+    } else if (activeTab === 'navigatorWorklist') {
+      fetchNavigatorWorklist();
+    } else if (activeTab === 'provenance') {
+      fetchAuditData();
     }
   }, [activeTab, activePackId]);
 
@@ -268,18 +397,340 @@ export default function CareLoopDashboard() {
     }
   }
 
+  async function fetchNavigatorWorklist(overridePackId?: string) {
+    setWorklistLoading(true);
+    try {
+      const targetPack = overridePackId || activePackId;
+      const res = await fetch(`/api/navigator/worklist?pack=${targetPack}`, {
+        headers: { 'x-user-role': activeRole },
+      });
+      const data = await res.json();
+      setWorklistTasks(data.tasks || []);
+    } catch (err) {
+      console.error('Failed to fetch worklist', err);
+    } finally {
+      setWorklistLoading(false);
+    }
+  }
+
+  async function fetchAuditData(overridePackId?: string) {
+    setAuditLoading(true);
+    try {
+      const targetPack = overridePackId || activePackId;
+      const res = await fetch(`/api/audit?pack=${targetPack}`);
+      const data = await res.json();
+      setAuditData(data);
+    } catch (err) {
+      console.error('Failed to fetch audit data', err);
+    } finally {
+      setAuditLoading(false);
+    }
+  }
+
+  async function handleSimulateTamper() {
+    setAuditLoading(true);
+    try {
+      const res = await fetch('/api/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pack: activePackId, simulateTamper: true }),
+      });
+      const data = await res.json();
+      setAuditData((prev: any) => ({
+        ...prev,
+        verification: data.verification,
+        simulationNote: 'Tamper injection simulated on historical entry. Cryptographic chain immediately detected corruption!',
+      }));
+    } catch (err) {
+      console.error('Tamper simulation error', err);
+    } finally {
+      setAuditLoading(false);
+    }
+  }
+
   async function fetchCaseDetail(id: string) {
     setDetailLoading(true);
     try {
-      const res = await fetch(`/api/cases/${id}`);
+      const res = await fetch(`/api/cases/${id}`, {
+        headers: {
+          'x-user-role': activeRole,
+          'x-user-id': `USER-${activeRole}`,
+        },
+      });
       const data = await res.json();
       setSelectedCaseDetail(data);
       setTransitionTarget('');
       setTransitionError(null);
+      setReferralError(null);
+      setReferralSuccess(null);
     } catch (err) {
       console.error('Failed to fetch case detail', err);
     } finally {
       setDetailLoading(false);
+    }
+  }
+
+  // Action: Assign Owner
+  async function handleAssignOwner() {
+    if (!selectedCaseDetail) return;
+    try {
+      const res = await fetch(`/api/cases/${selectedCaseDetail.case.id}/assign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': `USER-${activeRole}`,
+          'x-user-role': activeRole,
+        },
+        body: JSON.stringify({
+          ownerId: assigneeId,
+          ownerName: assigneeName,
+          ownerRole: assigneeRole,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert(`Error: ${data.error}`);
+      } else {
+        await fetchCaseDetail(selectedCaseDetail.case.id);
+        fetchCases();
+      }
+    } catch (err) {
+      console.error('Assign failed', err);
+    }
+  }
+
+  // Action: Send Structured Referral
+  async function handleSendReferral() {
+    if (!selectedCaseDetail) return;
+    setReferralError(null);
+    setReferralSuccess(null);
+
+    try {
+      const res = await fetch(`/api/cases/${selectedCaseDetail.case.id}/referral`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': `USER-${activeRole}`,
+          'x-user-role': activeRole,
+          'x-user-name': `${activeRole} Specialist`,
+        },
+        body: JSON.stringify({
+          receivingFacilityName: referralFacility,
+          specialty: referralSpecialty,
+          clinicalSummary: referralSummary,
+          urgency: selectedCaseDetail.case.urgency,
+          reason: `Urgent Diagnostic Referral: ${selectedCaseDetail.case.screeningTestType}`,
+          attachments: ['Screening_Lab_Result.pdf', 'Clinical_Summary.pdf'],
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setReferralError(data.error);
+      } else {
+        setReferralSuccess('Structured referral successfully dispatched to receiving facility.');
+        await fetchCaseDetail(selectedCaseDetail.case.id);
+        fetchCases();
+      }
+    } catch (err: any) {
+      setReferralError(err.message);
+    }
+  }
+
+  // Action: Facility Accept or Reject
+  async function handleFacilityAction() {
+    if (!selectedCaseDetail) return;
+    try {
+      const res = await fetch(`/api/cases/${selectedCaseDetail.case.id}/referral/action`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': 'USER-FACILITY-CHIEF',
+          'x-user-role': 'CLINICIAN',
+          'x-user-name': 'Receiving Facility Intake Triage',
+        },
+        body: JSON.stringify({
+          action: facilityActionType,
+          rejectionReason: facilityActionType === 'REJECT' ? facilityRejectionReason : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert(`Facility Error: ${data.error}`);
+      } else {
+        await fetchCaseDetail(selectedCaseDetail.case.id);
+        fetchCases();
+      }
+    } catch (err) {
+      console.error('Facility action error', err);
+    }
+  }
+
+  // Action: Record Appointment
+  async function handleRecordAppointment() {
+    if (!selectedCaseDetail) return;
+    try {
+      const res = await fetch(`/api/cases/${selectedCaseDetail.case.id}/appointment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': `USER-${activeRole}`,
+          'x-user-role': activeRole,
+        },
+        body: JSON.stringify({
+          appointmentDate,
+          facilityName: appointmentFacility,
+          providerName: 'Consultant Endoscopist / Surgeon',
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert(`Error: ${data.error}`);
+      } else {
+        await fetchCaseDetail(selectedCaseDetail.case.id);
+        fetchCases();
+      }
+    } catch (err) {
+      console.error('Appointment error', err);
+    }
+  }
+
+  // Action: Mark Attended
+  async function handleMarkAttended() {
+    if (!selectedCaseDetail) return;
+    try {
+      const res = await fetch(`/api/cases/${selectedCaseDetail.case.id}/attend`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': `USER-${activeRole}`,
+          'x-user-role': activeRole,
+        },
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert(`Error: ${data.error}`);
+      } else {
+        await fetchCaseDetail(selectedCaseDetail.case.id);
+        fetchCases();
+      }
+    } catch (err) {
+      console.error('Attend error', err);
+    }
+  }
+
+  // Action: Upload Diagnostic Report
+  async function handleUploadDiagnosticReport() {
+    if (!selectedCaseDetail) return;
+    try {
+      const res = await fetch(`/api/cases/${selectedCaseDetail.case.id}/diagnostic-report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': `USER-${activeRole}`,
+          'x-user-role': activeRole,
+        },
+        body: JSON.stringify({
+          procedureName: diagnosticProcedure,
+          findings: diagnosticFindings,
+          disposition: diagnosticDisposition,
+          specimenId,
+          conclusion: 'Diagnostic disposition verified. Clinical intervention completed with histological documentation.',
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert(`Error: ${data.error}`);
+      } else {
+        await fetchCaseDetail(selectedCaseDetail.case.id);
+        fetchCases();
+      }
+    } catch (err) {
+      console.error('Diagnostic report error', err);
+    }
+  }
+
+  // Action: Close Case (Clinical Resolution or Authorised Alternative)
+  async function handleCloseCase(mode: 'CLINICAL' | 'REQUEST_ALTERNATIVE' | 'AUTHORISE_ALTERNATIVE') {
+    if (!selectedCaseDetail) return;
+    try {
+      let body: any = {};
+      if (mode === 'CLINICAL') {
+        body = {
+          action: 'CLINICAL_RESOLUTION',
+          clinicalEvidenceRef: clinicalEvidenceRef || selectedCaseDetail.case.diagnosticReport?.reportId,
+          closureNote,
+        };
+      } else if (mode === 'REQUEST_ALTERNATIVE') {
+        body = {
+          action: 'REQUEST_AUTHORISED_ALTERNATIVE',
+          reason: authorisedReason,
+          closureNote,
+          requesterId: `USER-${activeRole}`,
+          requesterName: `${activeRole} Navigator`,
+          requesterRole: activeRole,
+        };
+      } else if (mode === 'AUTHORISE_ALTERNATIVE') {
+        body = {
+          action: 'AUTHORISE_ALTERNATIVE',
+        };
+      }
+
+      const res = await fetch(`/api/cases/${selectedCaseDetail.case.id}/close`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': `USER-${activeRole}`,
+          'x-user-role': activeRole,
+          'x-user-name': `${activeRole} Officer`,
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert(`Closure Rejected: ${data.error}`);
+      } else {
+        alert(
+          mode === 'REQUEST_ALTERNATIVE'
+            ? 'Alternative closure requested. Awaiting independent clinician authorization.'
+            : 'Case closed and cryptographically recorded.'
+        );
+        await fetchCaseDetail(selectedCaseDetail.case.id);
+        fetchCases();
+      }
+    } catch (err) {
+      console.error('Close error', err);
+    }
+  }
+
+  // Action: Send Consult Message
+  async function handleSendConsultMessage() {
+    if (!selectedCaseDetail || !consultText.trim()) return;
+    setConsultSending(true);
+    try {
+      const res = await fetch(`/api/cases/${selectedCaseDetail.case.id}/consult`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': `USER-${activeRole}`,
+          'x-user-role': activeRole,
+          'x-user-name': `${activeRole} Specialist`,
+        },
+        body: JSON.stringify({
+          content: consultText.trim(),
+          scope: consultScope,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert(`Consult Error: ${data.error}`);
+      } else {
+        setConsultText('');
+        await fetchCaseDetail(selectedCaseDetail.case.id);
+      }
+    } catch (err) {
+      console.error('Consult send error', err);
+    } finally {
+      setConsultSending(false);
     }
   }
 
@@ -318,7 +769,6 @@ export default function CareLoopDashboard() {
       if (!result.success) {
         setTransitionError(result.error || 'Transition rejected');
       } else {
-        // Refresh details
         await fetchCaseDetail(selectedCaseDetail.case.id);
         fetchCases();
       }
@@ -350,6 +800,9 @@ export default function CareLoopDashboard() {
       } else {
         await fetchCaseDetail(selectedCaseDetail.case.id);
         fetchCases();
+        if (activeTab === 'navigatorWorklist') {
+          fetchNavigatorWorklist();
+        }
       }
     } catch (err) {
       console.error('Failed to record outreach', err);
@@ -474,24 +927,88 @@ export default function CareLoopDashboard() {
   }
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-slate-50 text-slate-900 pb-12">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="min-h-screen bg-slate-50 text-slate-900 pb-16">
       {/* Top Banner: Synthetic Data & Safety Notice */}
-      <div className="bg-amber-600 text-white px-4 py-2 text-xs font-semibold flex items-center justify-between shadow-sm">
+      <div className="bg-amber-600 text-white px-4 py-2 text-xs font-semibold flex flex-wrap items-center justify-between shadow-sm gap-2">
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
           <span className="bg-amber-800 px-2 py-0.5 rounded text-[10px] tracking-wide uppercase font-mono">
             {activePack ? activePack.id.toUpperCase() : 'CARELOOP'}
           </span>
           <span>{t.syntheticBanner}</span>
         </div>
-        {activePack && activePack.languages.length > 1 && (
-          <button
-            onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
-            className="bg-amber-700 hover:bg-amber-800 px-3 py-1 rounded text-xs transition-colors"
+        <div className="flex items-center gap-3">
+          <Link
+            href="/patient"
+            className="bg-amber-800 hover:bg-amber-900 px-3 py-1 rounded text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
           >
-            {t.switchLang}
-          </button>
-        )}
+            {t.patientPwaBtn}
+          </Link>
+          {activePack && activePack.languages.length > 1 && (
+            <button
+              onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
+              className="bg-amber-700 hover:bg-amber-800 px-3 py-1 rounded text-xs transition-colors"
+            >
+              {t.switchLang}
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* DEMO CLOCK CONTROL BAR (Admin / Evaluator Control) */}
+      <div className="bg-indigo-900 text-white px-6 py-2.5 text-xs shadow-inner flex flex-wrap items-center justify-between gap-3 border-b border-indigo-950">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-bold tracking-wider uppercase text-[11px] text-indigo-200">
+              {t.demoClockTitle}:
+            </span>
+          </div>
+          {demoClockState && (
+            <div className="flex items-center gap-2 font-mono text-[11px]">
+              <span className="bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-700 text-indigo-100">
+                Simulated: <strong>{demoClockState.simulatedNow.substring(0, 10)}</strong>
+              </span>
+              <span className="text-indigo-300">
+                (Advanced: <strong className="text-amber-300">+{demoClockState.offsetDays}d</strong>)
+              </span>
+              <span className="text-indigo-400 hidden md:inline">
+                Real Clock: {demoClockState.realNow.substring(0, 10)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Demo Clock Buttons */}
+        <div className="flex items-center gap-1.5 font-mono text-xs">
+          <span className="text-[10px] text-indigo-300 mr-1 hidden sm:inline">Advance by:</span>
+          {[1, 3, 7, 14, 30].map((d) => (
+            <button
+              key={d}
+              onClick={() => handleAdvanceClock(d)}
+              className="bg-indigo-700 hover:bg-indigo-600 active:bg-indigo-800 px-2.5 py-1 rounded text-xs font-semibold transition-colors border border-indigo-600 shadow-sm"
+            >
+              +{d}d
+            </button>
+          ))}
+          <button
+            onClick={handleResetClock}
+            className="bg-rose-700 hover:bg-rose-600 active:bg-rose-800 px-3 py-1 rounded text-xs font-semibold ml-2 rtl:ml-0 rtl:mr-2 transition-colors border border-rose-600 shadow-sm"
+          >
+            {t.resetClock}
+          </button>
+        </div>
+      </div>
+
+      {/* Clock Advancement Toast Notification */}
+      {clockToast && (
+        <div className="bg-teal-700 text-white px-6 py-2 text-xs font-medium flex items-center justify-between transition-all">
+          <div className="flex items-center gap-2">
+            <span>⏰</span>
+            <span>{clockToast}</span>
+          </div>
+          <button onClick={() => setClockToast(null)} className="text-teal-200 hover:text-white">✕</button>
+        </div>
+      )}
 
       {/* Main Header */}
       <header className="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
@@ -533,7 +1050,7 @@ export default function CareLoopDashboard() {
             {/* Role Simulation Switcher (RBAC) */}
             <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200 text-xs">
               <span className="font-medium text-slate-600 px-2">{t.roleLabel}</span>
-              {(['NAVIGATOR', 'CLINICIAN', 'PROGRAMME_ANALYST', 'PATIENT'] as UserRole[]).map((r) => (
+              {(['NAVIGATOR', 'CLINICIAN', 'PROGRAMME_ANALYST'] as UserRole[]).map((r) => (
                 <button
                   key={r}
                   onClick={() => setActiveRole(r)}
@@ -549,9 +1066,10 @@ export default function CareLoopDashboard() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="max-w-7xl mx-auto flex gap-6 mt-6 border-b border-slate-100 text-sm font-medium">
+        <div className="max-w-7xl mx-auto flex gap-6 mt-6 border-b border-slate-100 text-sm font-medium overflow-x-auto">
           {[
             { id: 'cases', label: t.tabCases, badge: totalCount },
+            { id: 'navigatorWorklist', label: t.tabNavigatorWorklist, badge: worklistTasks.length || undefined },
             { id: 'analytics', label: t.tabAnalytics },
             { id: 'import', label: t.tabImport },
             { id: 'aiQueue', label: t.tabAiQueue, badge: aiQueueItems.filter((i) => i.status === 'PENDING_REVIEW').length || undefined },
@@ -560,7 +1078,7 @@ export default function CareLoopDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`pb-3 relative transition-colors ${
+              className={`pb-3 relative transition-colors whitespace-nowrap ${
                 activeTab === tab.id ? 'text-teal-700 font-semibold border-b-2 border-teal-600' : 'text-slate-500 hover:text-slate-800'
               }`}
             >
@@ -716,6 +1234,7 @@ export default function CareLoopDashboard() {
                   <option value="PATIENT_NOTIFIED">PATIENT_NOTIFIED</option>
                   <option value="ACKNOWLEDGED">ACKNOWLEDGED</option>
                   <option value="REFERRAL_SENT">REFERRAL_SENT</option>
+                  <option value="REFERRAL_ACCEPTED">REFERRAL_ACCEPTED</option>
                   <option value="APPOINTMENT_BOOKED">APPOINTMENT_BOOKED</option>
                   <option value="ATTENDED">ATTENDED</option>
                   <option value="DIAGNOSTIC_DISPOSITION_DOCUMENTED">DIAGNOSTIC_DISPOSITION_DOCUMENTED</option>
@@ -874,7 +1393,112 @@ export default function CareLoopDashboard() {
           </div>
         )}
 
-        {/* TAB 2: POPULATION ANALYTICS & HEALTH EQUITY */}
+        {/* TAB 2: NAVIGATOR WORKLIST */}
+        {activeTab === 'navigatorWorklist' && (
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 mb-1">
+                  {isRtl ? 'قائمة مهام المنسق الصحي الميداني' : 'Due Outreach & Navigation Worklist'}
+                </h2>
+                <p className="text-xs text-slate-500">
+                  {isRtl
+                    ? 'الحالات التي تتطلب تدخلاً فورياً (حالات حرجة، مكالمات توضيحية لتعثر الفهم، أو تجاوزت المهل المحددة)'
+                    : 'Actionable outreach ladder queue prioritizing CRITICAL cases, understanding test remediation calls, and overdue cases.'}
+                </p>
+              </div>
+              <button
+                onClick={() => fetchNavigatorWorklist()}
+                className="px-4 py-2 bg-teal-50 text-teal-700 border border-teal-200 rounded-lg text-xs font-bold hover:bg-teal-100"
+              >
+                ↻ Refresh Worklist
+              </button>
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left rtl:text-right text-xs">
+                  <thead className="bg-slate-50 text-slate-600 uppercase tracking-wider font-semibold border-b border-slate-200">
+                    <tr>
+                      <th className="px-4 py-3">Priority / Urgency</th>
+                      <th className="px-4 py-3">Case #</th>
+                      <th className="px-4 py-3">Patient</th>
+                      <th className="px-4 py-3">Pathway & State</th>
+                      <th className="px-4 py-3">Required Outreach Action</th>
+                      <th className="px-4 py-3">Assigned Role</th>
+                      <th className="px-4 py-3 text-right rtl:text-left">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {worklistLoading ? (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                          Loading due outreach actions...
+                        </td>
+                      </tr>
+                    ) : worklistTasks.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                          ✓ No outstanding outreach actions due at this time.
+                        </td>
+                      </tr>
+                    ) : (
+                      worklistTasks.map((task) => (
+                        <tr key={task.caseId} className="hover:bg-slate-50/80">
+                          <td className="px-4 py-3">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                task.urgency === 'CRITICAL'
+                                  ? 'bg-red-600 text-white'
+                                  : task.isOverdue
+                                  ? 'bg-rose-500 text-white'
+                                  : 'bg-amber-500 text-white'
+                              }`}
+                            >
+                              {task.urgency === 'CRITICAL' ? 'CRITICAL PINNED' : task.isOverdue ? 'OVERDUE' : 'DUE'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 font-mono font-bold text-teal-700">
+                            {task.caseNumber}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="font-semibold text-slate-900">{task.patient?.fullName}</div>
+                            <div className="text-[10px] text-slate-500 font-mono">{task.patient?.phone}</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="font-medium text-slate-800">{task.pathwayName}</div>
+                            <div className="text-[10px] font-mono text-slate-500">{task.currentState}</div>
+                          </td>
+                          <td className="px-4 py-3 max-w-xs">
+                            <div className="font-semibold text-slate-900 flex items-center gap-1.5">
+                              <span className="px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-800 text-[10px] font-mono font-bold">
+                                {task.nextAction.channel}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-slate-600 mt-0.5">{task.nextAction.actionDescription}</div>
+                          </td>
+                          <td className="px-4 py-3 font-mono text-slate-600">
+                            {task.nextAction.assignedRole}
+                          </td>
+                          <td className="px-4 py-3 text-right rtl:text-left">
+                            <button
+                              onClick={() => fetchCaseDetail(task.caseId)}
+                              className="px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 text-xs font-semibold shadow-sm"
+                            >
+                              Open Case
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: POPULATION ANALYTICS & HEALTH EQUITY */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
@@ -1013,7 +1637,7 @@ export default function CareLoopDashboard() {
           </div>
         )}
 
-        {/* TAB 3: CSV BATCH IMPORT */}
+        {/* TAB 4: CSV BATCH IMPORT */}
         {activeTab === 'import' && (
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
             <div>
@@ -1094,7 +1718,7 @@ export default function CareLoopDashboard() {
           </div>
         )}
 
-        {/* TAB 4: AI HUMAN APPROVAL QUEUE */}
+        {/* TAB 5: AI HUMAN APPROVAL QUEUE */}
         {activeTab === 'aiQueue' && (
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
             <div>
@@ -1182,46 +1806,109 @@ export default function CareLoopDashboard() {
           </div>
         )}
 
-        {/* TAB 5: DATA PROVENANCE & AUDIT CHAIN */}
+        {/* TAB 6: DATA PROVENANCE & AUDIT CHAIN */}
         {activeTab === 'provenance' && (
           <div className="space-y-6">
             {/* Cryptographic Hash Chain Verification */}
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-              <div className="flex justify-between items-start mb-4">
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">
                     {isRtl ? 'سلسلة التدقيق المشفرة (Cryptographic Hash Chain)' : 'Cryptographic Hash-Chained Audit Trail'}
                   </h2>
                   <p className="text-xs text-slate-500">
                     {isRtl
-                      ? 'ترتبط كل حركة في النظام تشفيرياً بتجزئة SHA-256 للمدخل السابق لضمان عدم التلاعب.'
-                      : 'Every case transition, outreach event, and closure records a continuous SHA-256 hash link to guarantee audit immutability.'}
+                      ? 'ترتبط كل حركة في النظام تشفيرياً بتجزئة SHA-256 للمدخل السابق مع تسجيل التوقيت الحقيقي والتوقيت التجريبي.'
+                      : 'Every case transition, outreach event, referral, and closure records a continuous SHA-256 hash link with both real wall-clock and simulated demo timestamps.'}
                   </p>
                 </div>
-                <button
-                  onClick={async () => {
-                    const res = await fetch('/api/cases/CASE-00001');
-                    const d = await res.json();
-                    setAuditVerificationResult({
-                      valid: true,
-                      sampleCount: d.auditHistory.length,
-                      latestHash: d.auditHistory[d.auditHistory.length - 1]?.hash,
-                    });
-                  }}
-                  className="px-4 py-2 bg-teal-600 text-white rounded-lg text-xs font-bold hover:bg-teal-700 shadow-sm"
-                >
-                  Verify Audit Chain Integrity
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={auditLoading}
+                    onClick={() => fetchAuditData()}
+                    className="px-4 py-2 bg-teal-600 text-white rounded-lg text-xs font-bold hover:bg-teal-700 shadow-sm disabled:opacity-50"
+                  >
+                    {auditLoading ? 'Verifying...' : 'Verify Audit Chain Integrity'}
+                  </button>
+                  <button
+                    disabled={auditLoading}
+                    onClick={handleSimulateTamper}
+                    className="px-3 py-2 bg-rose-50 text-rose-700 border border-rose-300 rounded-lg text-xs font-bold hover:bg-rose-100 disabled:opacity-50"
+                  >
+                    Simulate Tamper Test
+                  </button>
+                </div>
               </div>
 
-              {auditVerificationResult && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 space-y-1">
-                  <div className="font-bold flex items-center gap-2">
-                    <span>✓</span> Cryptographic Chain Integrity Verified: Zero Tampering Detected
+              {auditData && (
+                <div className="space-y-3">
+                  <div
+                    className={`p-4 rounded-lg border text-xs ${
+                      auditData.verification?.valid
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                        : 'bg-rose-50 border-rose-300 text-rose-900'
+                    }`}
+                  >
+                    <div className="font-bold flex items-center gap-2 text-sm">
+                      <span>{auditData.verification?.valid ? '✓' : '✗'}</span>
+                      <span>
+                        {auditData.verification?.valid
+                          ? 'Cryptographic Chain Integrity Verified: Zero Tampering Detected'
+                          : 'TAMPER DETECTED: Hash chain continuity breach!'}
+                      </span>
+                    </div>
+                    {!auditData.verification?.valid && (
+                      <div className="mt-1 font-mono text-[11px] text-rose-800">
+                        {auditData.verification?.reason}
+                      </div>
+                    )}
+                    {auditData.simulationNote && (
+                      <div className="mt-1 font-medium text-amber-800 text-[11px]">
+                        ℹ {auditData.simulationNote}
+                      </div>
+                    )}
+                    <div className="mt-2 text-[11px] font-mono text-slate-600">
+                      Total Ledger Blocks: <strong>{auditData.totalEntries}</strong> • Head Hash:{' '}
+                      <span className="font-mono">{auditData.latestHash?.substring(0, 24)}...</span>
+                    </div>
                   </div>
-                  <div className="font-mono text-[11px]">
-                    Verified sample of entries. Terminal block hash: {auditVerificationResult.latestHash}
-                  </div>
+
+                  {/* Recent Audit Entries Table */}
+                  {auditData.recentEntries && (
+                    <div className="border border-slate-200 rounded-lg overflow-hidden">
+                      <div className="bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700">
+                        Latest Audit Ledger Entries (Showing Real & Simulated Timestamps)
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        <table className="w-full text-left rtl:text-right text-[11px]">
+                          <thead className="bg-slate-50 text-slate-500 border-b">
+                            <tr>
+                              <th className="p-2 font-mono">Seq</th>
+                              <th className="p-2">Action</th>
+                              <th className="p-2">Resource</th>
+                              <th className="p-2">Actor (Role)</th>
+                              <th className="p-2 font-mono">Demo Timestamp</th>
+                              <th className="p-2 font-mono">Real Wall-Clock</th>
+                              <th className="p-2 font-mono">Entry Hash</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 font-mono text-[10px]">
+                            {auditData.recentEntries.map((e: any) => (
+                              <tr key={e.id} className="hover:bg-slate-50">
+                                <td className="p-2 font-bold text-slate-900">#{e.sequenceNumber}</td>
+                                <td className="p-2 font-sans font-semibold text-slate-800">{e.action}</td>
+                                <td className="p-2 text-slate-600">{e.resourceType}:{e.resourceId}</td>
+                                <td className="p-2 text-slate-700">{e.actorRole} ({e.actorId})</td>
+                                <td className="p-2 text-teal-700">{e.timestamp?.substring(0, 16)}</td>
+                                <td className="p-2 text-indigo-700">{e.realTimestamp?.substring(0, 16) || 'N/A'}</td>
+                                <td className="p-2 text-slate-400" title={e.hash}>{e.hash?.substring(0, 12)}...</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1307,7 +1994,7 @@ export default function CareLoopDashboard() {
       {/* Case Details Drawer / Modal */}
       {selectedCaseDetail && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-end">
-          <div className="w-full max-w-2xl bg-white h-full shadow-2xl overflow-y-auto flex flex-col">
+          <div className="w-full max-w-3xl bg-white h-full shadow-2xl overflow-y-auto flex flex-col">
             {/* Modal Header */}
             <div className="p-6 bg-slate-900 text-white flex justify-between items-start">
               <div>
@@ -1315,12 +2002,28 @@ export default function CareLoopDashboard() {
                   <span className="text-xl font-bold font-mono text-teal-400">
                     {selectedCaseDetail.case.caseNumber}
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-200">
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      selectedCaseDetail.case.urgency === 'CRITICAL'
+                        ? 'bg-red-600 text-white'
+                        : selectedCaseDetail.case.urgency === 'URGENT'
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-slate-700 text-slate-200'
+                    }`}
+                  >
                     {selectedCaseDetail.case.urgency}
                   </span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-900 text-teal-200 border border-teal-700">
+                    {selectedCaseDetail.case.currentState}
+                  </span>
+                  {selectedCaseDetail.case.isOverdue && (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white">
+                      OVERDUE
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-slate-400 font-mono">
-                  Screening Result ID: {selectedCaseDetail.case.screeningResultId} • Test: {selectedCaseDetail.case.screeningTestType}
+                  Result ID: {selectedCaseDetail.case.screeningResultId} • Test: {selectedCaseDetail.case.screeningTestType} • Primary Owner: {selectedCaseDetail.case.assignedOwner?.name || selectedCaseDetail.case.primaryOwnerId} ({selectedCaseDetail.case.primaryOwnerRole})
                 </p>
               </div>
               <button
@@ -1331,162 +2034,554 @@ export default function CareLoopDashboard() {
               </button>
             </div>
 
+            {/* Modal Subtabs */}
+            <div className="bg-slate-100 border-b border-slate-200 px-6 flex gap-4 text-xs font-semibold">
+              {[
+                { id: 'overview', label: 'Overview & Milestones' },
+                { id: 'actions', label: 'Clinical Actions (RBAC)' },
+                { id: 'consult', label: `Consult Thread (${selectedCaseDetail.consultMessages?.length || 0})` },
+                { id: 'timeline', label: `Timeline (${selectedCaseDetail.events?.length || 0})` },
+              ].map((mTab) => (
+                <button
+                  key={mTab.id}
+                  onClick={() => setActiveModalTab(mTab.id as any)}
+                  className={`py-3 border-b-2 transition-colors ${
+                    activeModalTab === mTab.id
+                      ? 'border-teal-600 text-teal-800 font-bold'
+                      : 'border-transparent text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {mTab.label}
+                </button>
+              ))}
+            </div>
+
             {/* Modal Body */}
             <div className="p-6 space-y-6 flex-1 text-xs">
-              {/* Patient Synthetic Demographic Card */}
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-bold text-slate-900 text-sm">
-                    {isRtl && selectedCaseDetail.patient?.fullNameArabic
-                      ? selectedCaseDetail.patient.fullNameArabic
-                      : selectedCaseDetail.patient?.fullName}
-                  </h4>
-                  <span className="font-mono text-teal-700 font-bold">
-                    {selectedCaseDetail.patient?.externalPatientId}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-slate-600 font-mono text-[11px]">
-                  <div>DOB: {selectedCaseDetail.patient?.dateOfBirth}</div>
-                  <div>Gender: {selectedCaseDetail.patient?.gender}</div>
-                  <div>Group / Status: {selectedCaseDetail.patient?.nationalityGroup || selectedCaseDetail.patient?.residencyStatus || 'Standard'}</div>
-                  <div>Language: {selectedCaseDetail.patient?.language?.toUpperCase()}</div>
-                  <div>Phone: {selectedCaseDetail.patient?.phone}</div>
-                  <div>Region: {selectedCaseDetail.patient?.region || selectedCaseDetail.patient?.emirate || 'Central'}</div>
-                  <div>SMS Consent: {selectedCaseDetail.patient?.consentFlags?.smsConsent ? '✓ Yes' : '✗ No'}</div>
-                  <div>WhatsApp Consent: {selectedCaseDetail.patient?.consentFlags?.whatsappConsent ? '✓ Yes' : '✗ No'}</div>
-                </div>
-              </div>
+              {/* SUBTAB 1: OVERVIEW & MILESTONES */}
+              {activeModalTab === 'overview' && (
+                <div className="space-y-6">
+                  {/* Patient Synthetic Demographic Card */}
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-bold text-slate-900 text-sm">
+                        {isRtl && selectedCaseDetail.patient?.fullNameArabic
+                          ? selectedCaseDetail.patient.fullNameArabic
+                          : selectedCaseDetail.patient?.fullName}
+                      </h4>
+                      <span className="font-mono text-teal-700 font-bold">
+                        {selectedCaseDetail.patient?.externalPatientId}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-slate-600 font-mono text-[11px]">
+                      <div>DOB: {selectedCaseDetail.patient?.dateOfBirth}</div>
+                      <div>Gender: {selectedCaseDetail.patient?.gender}</div>
+                      <div>Group: {selectedCaseDetail.patient?.nationalityGroup || selectedCaseDetail.patient?.residencyStatus || 'Standard'}</div>
+                      <div>Language: {selectedCaseDetail.patient?.language?.toUpperCase()}</div>
+                      <div>Phone: {selectedCaseDetail.patient?.phone}</div>
+                      <div>Region: {selectedCaseDetail.patient?.region || selectedCaseDetail.patient?.emirate || 'Central'}</div>
+                      <div>SMS Consent: {selectedCaseDetail.patient?.consentFlags?.smsConsent ? '✓ Yes' : '✗ No'}</div>
+                      <div className={selectedCaseDetail.patient?.consentFlags?.dataSharingConsent ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'}>
+                        Data-Sharing: {selectedCaseDetail.patient?.consentFlags?.dataSharingConsent ? '✓ Yes' : '✗ Denied'}
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Status & Milestones */}
-              <div className="space-y-2">
-                <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
-                  Closed-Loop Pathway Milestones
-                </h4>
-                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-                  <div className="p-2 bg-slate-50 rounded border">
-                    Notification: {selectedCaseDetail.case.milestones.notificationDeliveredAt?.substring(0, 16) || '—'}
+                  {/* 8 Distinct Milestones Grid */}
+                  <div className="space-y-2">
+                    <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
+                      8 Closed-Loop Pathway Milestones (Timestamped Audit)
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                      <div className={`p-2 rounded border ${selectedCaseDetail.case.milestones.notificationDeliveredAt ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 text-slate-400'}`}>
+                        1. Notification Delivered: {selectedCaseDetail.case.milestones.notificationDeliveredAt?.substring(0, 16) || 'Pending'}
+                      </div>
+                      <div className={`p-2 rounded border ${selectedCaseDetail.case.milestones.acknowledgedAt ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 text-slate-400'}`}>
+                        2. Acknowledged: {selectedCaseDetail.case.milestones.acknowledgedAt?.substring(0, 16) || 'Pending'}
+                      </div>
+                      <div className={`p-2 rounded border ${selectedCaseDetail.case.milestones.understandingConfirmedAt ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 text-slate-400'}`}>
+                        3. Understanding Confirmed: {selectedCaseDetail.case.milestones.understandingConfirmedAt?.substring(0, 16) || 'Pending'}
+                      </div>
+                      <div className={`p-2 rounded border ${selectedCaseDetail.case.milestones.referralCreatedAt ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 text-slate-400'}`}>
+                        4. Referral Sent: {selectedCaseDetail.case.milestones.referralCreatedAt?.substring(0, 16) || 'Pending'}
+                      </div>
+                      <div className={`p-2 rounded border ${selectedCaseDetail.case.milestones.referralAcceptedAt ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 text-slate-400'}`}>
+                        5. Referral Accepted: {selectedCaseDetail.case.milestones.referralAcceptedAt?.substring(0, 16) || 'Pending'}
+                      </div>
+                      <div className={`p-2 rounded border ${selectedCaseDetail.case.milestones.appointmentBookedAt ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 text-slate-400'}`}>
+                        6. Appointment Booked: {selectedCaseDetail.case.milestones.appointmentBookedAt?.substring(0, 16) || 'Pending'}
+                      </div>
+                      <div className={`p-2 rounded border ${selectedCaseDetail.case.milestones.attendedAt ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 text-slate-400'}`}>
+                        7. Attended: {selectedCaseDetail.case.milestones.attendedAt?.substring(0, 16) || 'Pending'}
+                      </div>
+                      <div className={`p-2 rounded border ${selectedCaseDetail.case.milestones.diagnosticDispositionDocumentedAt ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 text-slate-400'}`}>
+                        8. Disposition Documented: {selectedCaseDetail.case.milestones.diagnosticDispositionDocumentedAt?.substring(0, 16) || 'Pending'}
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-2 bg-slate-50 rounded border">
-                    Acknowledged: {selectedCaseDetail.case.milestones.acknowledgedAt?.substring(0, 16) || '—'}
-                  </div>
-                  <div className="p-2 bg-slate-50 rounded border">
-                    Referral Sent: {selectedCaseDetail.case.milestones.referralCreatedAt?.substring(0, 16) || '—'}
-                  </div>
-                  <div className="p-2 bg-slate-50 rounded border">
-                    Referral Accepted: {selectedCaseDetail.case.milestones.referralAcceptedAt?.substring(0, 16) || '—'}
-                  </div>
-                  <div className="p-2 bg-slate-50 rounded border">
-                    Appointment Booked: {selectedCaseDetail.case.milestones.appointmentBookedAt?.substring(0, 16) || '—'}
-                  </div>
-                  <div className="p-2 bg-slate-50 rounded border">
-                    Attended: {selectedCaseDetail.case.milestones.attendedAt?.substring(0, 16) || '—'}
-                  </div>
-                  <div className="p-2 bg-slate-50 rounded border col-span-2">
-                    Diagnostic Disposition Documented: {selectedCaseDetail.case.milestones.diagnosticDispositionDocumentedAt?.substring(0, 16) || '—'}
-                  </div>
-                </div>
-              </div>
 
-              {/* Closure Details (if closed) */}
-              {selectedCaseDetail.case.closure && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-900 space-y-1">
-                  <div className="font-bold">
-                    Case Closed: {selectedCaseDetail.case.closure.closureType}
-                  </div>
-                  <div className="text-[11px]">
-                    Authorised by: {selectedCaseDetail.case.closure.authoriserName} ({selectedCaseDetail.case.closure.authoriserRole})
-                  </div>
-                  {selectedCaseDetail.case.closure.clinicalEvidenceRef && (
-                    <div className="text-[11px] font-mono">
-                      Evidence Ref: {selectedCaseDetail.case.closure.clinicalEvidenceRef}
+                  {/* Closure Details (if closed) */}
+                  {selectedCaseDetail.case.closure && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-900 space-y-1">
+                      <div className="font-bold">
+                        Case Closed: {selectedCaseDetail.case.closure.closureType}
+                      </div>
+                      <div className="text-[11px]">
+                        Authorised by: {selectedCaseDetail.case.closure.authoriserName} ({selectedCaseDetail.case.closure.authoriserRole})
+                      </div>
+                      {selectedCaseDetail.case.closure.requesterName && (
+                        <div className="text-[11px] text-teal-800">
+                          Requested by: {selectedCaseDetail.case.closure.requesterName} ({selectedCaseDetail.case.closure.requesterRole})
+                        </div>
+                      )}
+                      {selectedCaseDetail.case.closure.clinicalEvidenceRef && (
+                        <div className="text-[11px] font-mono">
+                          Evidence Ref: {selectedCaseDetail.case.closure.clinicalEvidenceRef}
+                        </div>
+                      )}
+                      <div className="text-[11px] italic">
+                        Note: "{selectedCaseDetail.case.closure.closureNote}"
+                      </div>
                     </div>
                   )}
-                  <div className="text-[11px] italic">
-                    Note: "{selectedCaseDetail.case.closure.closureNote}"
+
+                  {/* Pending Alternative Closure Request Banner */}
+                  {selectedCaseDetail.case.pendingAlternativeClosure && (
+                    <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg text-amber-900 space-y-1">
+                      <div className="font-bold flex items-center gap-1.5">
+                        <span>⏳</span> Pending Authorised Alternative Closure Request
+                      </div>
+                      <div className="text-[11px]">
+                        Requested by: <strong>{selectedCaseDetail.case.pendingAlternativeClosure.requesterName}</strong> ({selectedCaseDetail.case.pendingAlternativeClosure.requesterRole})
+                      </div>
+                      <div className="text-[11px]">
+                        Reason Code: <strong>{selectedCaseDetail.case.pendingAlternativeClosure.reason}</strong>
+                      </div>
+                      <div className="text-[11px] italic">
+                        Note: "{selectedCaseDetail.case.pendingAlternativeClosure.note}"
+                      </div>
+                      {activeRole === 'CLINICIAN' && (
+                        <div className="pt-2">
+                          <button
+                            onClick={() => handleCloseCase('AUTHORISE_ALTERNATIVE')}
+                            className="px-3 py-1 bg-amber-700 text-white rounded text-xs font-bold hover:bg-amber-800"
+                          >
+                            Affirm & Authorise Alternative Closure (Clinician Role)
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Next Outreach Recommendation */}
+                  {selectedCaseDetail.nextOutreachRecommendation && (
+                    <div className="p-3 bg-teal-50 border border-teal-200 rounded-lg space-y-1">
+                      <div className="font-bold text-teal-900">
+                        Next Recommended Outreach Action (Ladder Step {selectedCaseDetail.nextOutreachRecommendation.stepNumber})
+                      </div>
+                      <div className="text-[11px] text-teal-800">
+                        Channel: <strong>{selectedCaseDetail.nextOutreachRecommendation.channel}</strong> | Assignee: <strong>{selectedCaseDetail.nextOutreachRecommendation.assignedRole}</strong>
+                      </div>
+                      <div className="text-[11px] text-teal-700">
+                        {selectedCaseDetail.nextOutreachRecommendation.description}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Log Outreach Attempt Form */}
+                  <div className="p-4 border border-slate-200 rounded-xl space-y-3 bg-white">
+                    <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
+                      Log New Outreach Attempt
+                    </h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      <select
+                        value={outreachChannel}
+                        onChange={(e) => setOutreachChannel(e.target.value as OutreachChannel)}
+                        className="p-1.5 border border-slate-300 rounded text-xs bg-white"
+                      >
+                        <option value="SMS">SMS</option>
+                        <option value="WHATSAPP">WHATSAPP</option>
+                        <option value="CALL">VOICE CALL</option>
+                        <option value="NAVIGATOR_VISIT">NAVIGATOR VISIT</option>
+                        <option value="CLINICIAN">CLINICIAN</option>
+                      </select>
+
+                      <select
+                        value={outreachOutcome}
+                        onChange={(e) => setOutreachOutcome(e.target.value as OutreachOutcome)}
+                        className="p-1.5 border border-slate-300 rounded text-xs bg-white"
+                      >
+                        <option value="ACKNOWLEDGED">ACKNOWLEDGED</option>
+                        <option value="DELIVERED">DELIVERED (NO RESPONSE)</option>
+                        <option value="NO_ANSWER">NO ANSWER</option>
+                        <option value="DECLINED">DECLINED</option>
+                        <option value="WRONG_NUMBER">WRONG NUMBER</option>
+                      </select>
+
+                      <select
+                        value={barrierReason}
+                        onChange={(e) => setBarrierReason(e.target.value as BarrierReason)}
+                        className="p-1.5 border border-slate-300 rounded text-xs bg-white"
+                      >
+                        <option value="">No Barrier Documented</option>
+                        <option value="FEAR_ANXIETY">FEAR_ANXIETY</option>
+                        <option value="APPOINTMENT_UNAVAILABLE">APPOINTMENT_UNAVAILABLE</option>
+                        <option value="COMPETING_PRIORITIES">COMPETING_PRIORITIES</option>
+                        <option value="COST_INSURANCE">COST_INSURANCE</option>
+                        <option value="LOW_HEALTH_LITERACY">LOW_HEALTH_LITERACY</option>
+                        <option value="COMMUNICATION_FAILURE">COMMUNICATION_FAILURE</option>
+                        <option value="TRANSPORT">TRANSPORT</option>
+                        <option value="UNREACHABLE">UNREACHABLE</option>
+                        <option value="OTHER">OTHER</option>
+                      </select>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={outreachNotes}
+                        onChange={(e) => setOutreachNotes(e.target.value)}
+                        placeholder="Outreach notes..."
+                        className="flex-1 p-1.5 border border-slate-300 rounded text-xs"
+                      />
+                      <button
+                        onClick={handleRecordOutreach}
+                        className="px-3 py-1.5 bg-slate-800 text-white rounded text-xs font-semibold hover:bg-slate-700"
+                      >
+                        Log Attempt
+                      </button>
+                    </div>
+
+                    {/* Generate AI Draft Button */}
+                    <div className="pt-2 border-t border-slate-100 flex justify-end">
+                      <button
+                        disabled={aiGenerating}
+                        onClick={() => handleGenerateAiDraft(selectedCaseDetail.case.id)}
+                        className="px-3 py-1.5 bg-teal-50 text-teal-700 border border-teal-200 rounded text-xs font-semibold hover:bg-teal-100 disabled:opacity-50"
+                      >
+                        {aiGenerating ? 'Generating...' : t.generateAiDraft}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Outreach History */}
+                  <div className="space-y-2">
+                    <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
+                      Outreach Attempts History ({selectedCaseDetail.outreachAttempts.length})
+                    </h4>
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {selectedCaseDetail.outreachAttempts.map((o: any) => (
+                        <div key={o.id} className="p-2 bg-slate-50 rounded border text-[11px] flex justify-between">
+                          <div>
+                            <span className="font-bold">{o.channel}</span> • <span className="font-mono">{o.outcome}</span>
+                            {o.barrierReason && <span className="text-red-600 ml-2">[{o.barrierReason}]</span>}
+                            {o.notes && <div className="text-slate-500 text-[10px] italic">{o.notes}</div>}
+                          </div>
+                          <span className="text-slate-400 font-mono text-[10px]">{o.attemptedAt.substring(0, 16)}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Next Outreach Ladder Step Recommendation */}
-              {selectedCaseDetail.nextOutreachRecommendation && (
-                <div className="p-3 bg-teal-50 border border-teal-200 rounded-lg space-y-1">
-                  <div className="font-bold text-teal-900">
-                    Next Recommended Outreach Action (Ladder Step {selectedCaseDetail.nextOutreachRecommendation.stepNumber})
-                  </div>
-                  <div className="text-[11px] text-teal-800">
-                    Channel: <strong>{selectedCaseDetail.nextOutreachRecommendation.channel}</strong> | Assignee: <strong>{selectedCaseDetail.nextOutreachRecommendation.assignedRole}</strong>
-                  </div>
-                  <div className="text-[11px] text-teal-700">
-                    {selectedCaseDetail.nextOutreachRecommendation.description}
-                  </div>
-                </div>
-              )}
+              {/* SUBTAB 2: CLINICAL ACTIONS (RBAC Enforced) */}
+              {activeModalTab === 'actions' && (
+                <div className="space-y-6">
+                  {activeRole === 'PROGRAMME_ANALYST' && (
+                    <div className="p-3 bg-amber-50 border border-amber-300 text-amber-900 rounded-lg text-xs font-semibold">
+                      🔒 Read-Only Governance: Programme Analyst role cannot perform clinical mutations or status changes.
+                    </div>
+                  )}
 
-              {/* Interactive State Transition Controller (RBAC Enforced) */}
-              <div className="p-4 border border-slate-200 rounded-xl space-y-3 bg-white">
-                <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
-                  Execute State Transition (Acting as: {activeRole})
-                </h4>
-
-                <div className="flex gap-2">
-                  <select
-                    value={transitionTarget}
-                    onChange={(e) => setTransitionTarget(e.target.value as CaseState)}
-                    className="flex-1 p-2 border border-slate-300 rounded text-xs bg-white"
-                  >
-                    <option value="">Select Target State...</option>
-                    <option value="PATIENT_NOTIFIED">PATIENT_NOTIFIED</option>
-                    <option value="ACKNOWLEDGED">ACKNOWLEDGED</option>
-                    <option value="REFERRAL_SENT">REFERRAL_SENT</option>
-                    <option value="REFERRAL_ACCEPTED">REFERRAL_ACCEPTED</option>
-                    <option value="APPOINTMENT_BOOKED">APPOINTMENT_BOOKED</option>
-                    <option value="ATTENDED">ATTENDED</option>
-                    <option value="DIAGNOSTIC_DISPOSITION_DOCUMENTED">DIAGNOSTIC_DISPOSITION_DOCUMENTED</option>
-                    <option value="TREATMENT_OR_SURVEILLANCE">TREATMENT_OR_SURVEILLANCE</option>
-                    <option value="CLOSED">CLOSED (Requires Evidence or Authorisation)</option>
-                    <option value="ESCALATED">ESCALATED</option>
-                    <option value="REJECTED">REJECTED</option>
-                  </select>
-
-                  <button
-                    disabled={!transitionTarget}
-                    onClick={handleExecuteTransition}
-                    className="px-4 py-2 bg-teal-600 text-white font-bold rounded hover:bg-teal-700 disabled:opacity-40 text-xs shadow-sm"
-                  >
-                    Transition
-                  </button>
-                </div>
-
-                {/* Additional Inputs Required for CLOSED */}
-                {transitionTarget === 'CLOSED' && (
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded space-y-2 mt-2">
-                    <label className="font-bold text-[11px]">Closure Type:</label>
-                    <select
-                      value={closureType}
-                      onChange={(e) => setClosureType(e.target.value as ClosureType)}
-                      className="w-full p-1.5 border border-slate-300 rounded text-xs bg-white"
+                  {/* 1. Assign Owner */}
+                  <div className="p-4 border border-slate-200 rounded-xl space-y-3 bg-white">
+                    <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
+                      1. Assign Case Owner
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <input
+                        type="text"
+                        value={assigneeId}
+                        onChange={(e) => setAssigneeId(e.target.value)}
+                        placeholder="Owner User ID"
+                        className="p-1.5 border border-slate-300 rounded text-xs font-mono"
+                      />
+                      <input
+                        type="text"
+                        value={assigneeName}
+                        onChange={(e) => setAssigneeName(e.target.value)}
+                        placeholder="Owner Full Name"
+                        className="p-1.5 border border-slate-300 rounded text-xs"
+                      />
+                      <select
+                        value={assigneeRole}
+                        onChange={(e) => setAssigneeRole(e.target.value as UserRole)}
+                        className="p-1.5 border border-slate-300 rounded text-xs bg-white"
+                      >
+                        <option value="CLINICIAN">CLINICIAN</option>
+                        <option value="NAVIGATOR">NAVIGATOR</option>
+                      </select>
+                    </div>
+                    <button
+                      disabled={activeRole === 'PROGRAMME_ANALYST'}
+                      onClick={handleAssignOwner}
+                      className="px-4 py-1.5 bg-teal-600 text-white rounded text-xs font-bold hover:bg-teal-700 disabled:opacity-40"
                     >
-                      <option value="CLINICAL_RESOLUTION">CLINICAL_RESOLUTION (Diagnostic disposition + Evidence)</option>
-                      <option value="AUTHORISED_ALTERNATIVE">AUTHORISED_ALTERNATIVE (Informed refusal, unreachable, transferred)</option>
-                    </select>
+                      Assign Case Owner
+                    </button>
+                  </div>
 
-                    {closureType === 'CLINICAL_RESOLUTION' ? (
+                  {/* 2. Send Structured Referral (With Data-Sharing Consent Verification) */}
+                  <div className="p-4 border border-slate-200 rounded-xl space-y-3 bg-white">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
+                        2. Send Structured Referral to Specialist
+                      </h4>
+                      {selectedCaseDetail.patient?.consentFlags?.dataSharingConsent ? (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          ✓ Data-Sharing Consent Granted
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                          ✗ Data-Sharing Consent Missing (Blocks Dispatch)
+                        </span>
+                      )}
+                    </div>
+
+                    {!selectedCaseDetail.patient?.consentFlags?.dataSharingConsent && (
+                      <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-[11px]">
+                        <strong>Governance Gate:</strong> Referral cannot be dispatched because the patient has not consented to external facility data sharing. Switch to the Patient PWA or obtain verbal authorization.
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[11px] font-semibold text-slate-700">Clinical Evidence Reference (Report / Pathology ID):</label>
+                        <label className="text-[10px] text-slate-500 font-semibold">Receiving Facility:</label>
                         <input
                           type="text"
-                          value={clinicalEvidenceRef}
-                          onChange={(e) => setClinicalEvidenceRef(e.target.value)}
+                          value={referralFacility}
+                          onChange={(e) => setReferralFacility(e.target.value)}
+                          className="w-full p-1.5 border border-slate-300 rounded text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-slate-500 font-semibold">Specialty:</label>
+                        <input
+                          type="text"
+                          value={referralSpecialty}
+                          onChange={(e) => setReferralSpecialty(e.target.value)}
+                          className="w-full p-1.5 border border-slate-300 rounded text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500 font-semibold">Clinical Summary & Reason:</label>
+                      <input
+                        type="text"
+                        value={referralSummary}
+                        onChange={(e) => setReferralSummary(e.target.value)}
+                        className="w-full p-1.5 border border-slate-300 rounded text-xs"
+                      />
+                    </div>
+
+                    {referralError && (
+                      <div className="p-2 bg-rose-50 border border-rose-200 text-rose-700 rounded text-xs">
+                        {referralError}
+                      </div>
+                    )}
+                    {referralSuccess && (
+                      <div className="p-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded text-xs">
+                        {referralSuccess}
+                      </div>
+                    )}
+
+                    <button
+                      disabled={activeRole === 'PROGRAMME_ANALYST' || !selectedCaseDetail.patient?.consentFlags?.dataSharingConsent}
+                      onClick={handleSendReferral}
+                      className="px-4 py-2 bg-teal-600 text-white rounded text-xs font-bold hover:bg-teal-700 disabled:opacity-40 shadow-sm"
+                    >
+                      Dispatch Structured Referral
+                    </button>
+                  </div>
+
+                  {/* 3. Facility Action (Accept or Reject) */}
+                  <div className="p-4 border border-slate-200 rounded-xl space-y-3 bg-white">
+                    <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
+                      3. Receiving Facility Response (Accept / Reject Simulation)
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Simulates the receiving diagnostic clinic triaging the referral. If rejected, the case returns to the owner as ESCALATED.
+                    </p>
+                    <div className="flex gap-4 items-center">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="facAction"
+                          checked={facilityActionType === 'ACCEPT'}
+                          onChange={() => setFacilityActionType('ACCEPT')}
+                        />
+                        <span className="font-bold text-emerald-700">Accept Referral</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="facAction"
+                          checked={facilityActionType === 'REJECT'}
+                          onChange={() => setFacilityActionType('REJECT')}
+                        />
+                        <span className="font-bold text-rose-700">Reject Referral (Escalates)</span>
+                      </label>
+                    </div>
+
+                    {facilityActionType === 'REJECT' && (
+                      <div>
+                        <label className="text-[10px] text-slate-500 font-semibold">Rejection Reason Code:</label>
+                        <select
+                          value={facilityRejectionReason}
+                          onChange={(e) => setFacilityRejectionReason(e.target.value)}
+                          className="w-full p-1.5 border border-slate-300 rounded text-xs bg-white"
+                        >
+                          <option value="CLINICAL_CAPACITY_EXCEEDED">CLINICAL_CAPACITY_EXCEEDED</option>
+                          <option value="OUT_OF_CATCHMENT_AREA">OUT_OF_CATCHMENT_AREA</option>
+                          <option value="INSUFFICIENT_CLINICAL_INFORMATION">INSUFFICIENT_CLINICAL_INFORMATION</option>
+                          <option value="SPECIALTY_MISMATCH">SPECIALTY_MISMATCH</option>
+                        </select>
+                      </div>
+                    )}
+
+                    <button
+                      disabled={activeRole === 'PROGRAMME_ANALYST'}
+                      onClick={handleFacilityAction}
+                      className="px-4 py-1.5 bg-slate-800 text-white rounded text-xs font-bold hover:bg-slate-700 disabled:opacity-40"
+                    >
+                      Record Facility Triage Decision
+                    </button>
+                  </div>
+
+                  {/* 4. Book & Attend Appointment */}
+                  <div className="p-4 border border-slate-200 rounded-xl space-y-3 bg-white">
+                    <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
+                      4. Appointment Scheduling & Attendance
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-slate-500 font-semibold">Appointment Date & Time:</label>
+                        <input
+                          type="text"
+                          value={appointmentDate}
+                          onChange={(e) => setAppointmentDate(e.target.value)}
                           className="w-full p-1.5 border border-slate-300 rounded text-xs font-mono"
                         />
                       </div>
-                    ) : (
                       <div>
-                        <label className="text-[11px] font-semibold text-slate-700">Authorised Alternative Reason Code:</label>
+                        <label className="text-[10px] text-slate-500 font-semibold">Location / Clinic Suite:</label>
+                        <input
+                          type="text"
+                          value={appointmentFacility}
+                          onChange={(e) => setAppointmentFacility(e.target.value)}
+                          className="w-full p-1.5 border border-slate-300 rounded text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        disabled={activeRole === 'PROGRAMME_ANALYST'}
+                        onClick={handleRecordAppointment}
+                        className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-bold hover:bg-blue-700 disabled:opacity-40"
+                      >
+                        Record Appointment Booked
+                      </button>
+                      <button
+                        disabled={activeRole === 'PROGRAMME_ANALYST'}
+                        onClick={handleMarkAttended}
+                        className="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-bold hover:bg-indigo-700 disabled:opacity-40"
+                      >
+                        Mark Patient Attended
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 5. Upload Diagnostic Report (Sets DIAGNOSTIC_DISPOSITION_DOCUMENTED) */}
+                  <div className="p-4 border border-slate-200 rounded-xl space-y-3 bg-white">
+                    <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
+                      5. Upload Synthetic Diagnostic Report & Document Disposition
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-slate-500 font-semibold">Procedure Name:</label>
+                        <input
+                          type="text"
+                          value={diagnosticProcedure}
+                          onChange={(e) => setDiagnosticProcedure(e.target.value)}
+                          className="w-full p-1.5 border border-slate-300 rounded text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-slate-500 font-semibold">Specimen / Pathology ID:</label>
+                        <input
+                          type="text"
+                          value={specimenId}
+                          onChange={(e) => setSpecimenId(e.target.value)}
+                          className="w-full p-1.5 border border-slate-300 rounded text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500 font-semibold">Clinical Findings:</label>
+                      <input
+                        type="text"
+                        value={diagnosticFindings}
+                        onChange={(e) => setDiagnosticFindings(e.target.value)}
+                        className="w-full p-1.5 border border-slate-300 rounded text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-slate-500 font-semibold">Diagnostic Disposition:</label>
+                      <input
+                        type="text"
+                        value={diagnosticDisposition}
+                        onChange={(e) => setDiagnosticDisposition(e.target.value)}
+                        className="w-full p-1.5 border border-slate-300 rounded text-xs font-mono"
+                      />
+                    </div>
+                    <button
+                      disabled={activeRole === 'PROGRAMME_ANALYST'}
+                      onClick={handleUploadDiagnosticReport}
+                      className="px-4 py-2 bg-purple-600 text-white rounded text-xs font-bold hover:bg-purple-700 disabled:opacity-40 shadow-sm"
+                    >
+                      Document Disposition & Attach Report
+                    </button>
+                  </div>
+
+                  {/* 6. Case Closure (Clinical Resolution vs Authorised Alternative) */}
+                  <div className="p-4 border border-slate-200 rounded-xl space-y-3 bg-white">
+                    <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
+                      6. Case Closure Governance (Clinical Resolution or Authorised Alternative)
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Strict Gate: A case can reach CLOSED only with completed diagnostic disposition evidence OR an explicit human-authorised alternative. For alternatives, navigator requests and clinician authorises (requester $\neq$ authoriser).
+                    </p>
+
+                    <div className="flex gap-2">
+                      <button
+                        disabled={activeRole === 'PROGRAMME_ANALYST'}
+                        onClick={() => handleCloseCase('CLINICAL')}
+                        className="px-4 py-2 bg-emerald-600 text-white rounded text-xs font-bold hover:bg-emerald-700 disabled:opacity-40 shadow-sm"
+                      >
+                        Close via CLINICAL_RESOLUTION (Requires Evidence)
+                      </button>
+                    </div>
+
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 mt-2">
+                      <label className="text-[10px] text-slate-600 font-bold uppercase">
+                        Or Request Authorised Alternative Closure:
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <select
                           value={authorisedReason}
                           onChange={(e) => setAuthorisedReason(e.target.value as AuthorisedAlternativeReason)}
-                          className="w-full p-1.5 border border-slate-300 rounded text-xs bg-white"
+                          className="p-1.5 border border-slate-300 rounded text-xs bg-white"
                         >
                           <option value="INFORMED_REFUSAL">INFORMED_REFUSAL</option>
                           <option value="TRANSFERRED_CARE">TRANSFERRED_CARE</option>
@@ -1494,152 +2589,157 @@ export default function CareLoopDashboard() {
                           <option value="DECEASED">DECEASED</option>
                           <option value="OTHER">OTHER</option>
                         </select>
+                        <input
+                          type="text"
+                          value={closureNote}
+                          onChange={(e) => setClosureNote(e.target.value)}
+                          placeholder="Mandatory explanatory note..."
+                          className="p-1.5 border border-slate-300 rounded text-xs"
+                        />
                       </div>
-                    )}
+                      <div className="flex justify-between items-center pt-1">
+                        <button
+                          disabled={activeRole === 'PROGRAMME_ANALYST'}
+                          onClick={() => handleCloseCase('REQUEST_ALTERNATIVE')}
+                          className="px-3 py-1.5 bg-amber-600 text-white rounded text-xs font-bold hover:bg-amber-700 disabled:opacity-40"
+                        >
+                          Submit Alternative Closure Request
+                        </button>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          Requester: USER-{activeRole}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-                    <div>
-                      <label className="text-[11px] font-semibold text-slate-700">Closure Authorisation Note (Mandatory):</label>
+              {/* SUBTAB 3: CONSULT THREAD */}
+              {activeModalTab === 'consult' && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
+                      Bimodal Consult Thread
+                    </h4>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setConsultScope('PATIENT_TO_CLINICIAN')}
+                        className={`px-2.5 py-1 rounded text-xs font-semibold ${
+                          consultScope === 'PATIENT_TO_CLINICIAN'
+                            ? 'bg-teal-700 text-white'
+                            : 'bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        Patient-to-Clinician
+                      </button>
+                      <button
+                        onClick={() => setConsultScope('CLINICIAN_TO_CLINICIAN')}
+                        className={`px-2.5 py-1 rounded text-xs font-semibold ${
+                          consultScope === 'CLINICIAN_TO_CLINICIAN'
+                            ? 'bg-teal-700 text-white'
+                            : 'bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        Clinician-to-Clinician (Internal)
+                      </button>
+                    </div>
+                  </div>
+
+                  {consultScope === 'PATIENT_TO_CLINICIAN' && (
+                    <div className="p-2.5 bg-amber-50 border border-amber-300 text-amber-900 rounded-lg text-xs font-medium">
+                      ⚠️ EMERGENCY NOTICE: This thread is for non-urgent care navigation only. In emergencies, patients are instructed to call emergency services immediately.
+                    </div>
+                  )}
+
+                  {/* Message History */}
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 max-h-72 overflow-y-auto">
+                    {(!selectedCaseDetail.consultMessages || selectedCaseDetail.consultMessages.length === 0) ? (
+                      <div className="text-center py-6 text-slate-400 text-xs">
+                        No messages recorded in this consultation thread yet.
+                      </div>
+                    ) : (
+                      selectedCaseDetail.consultMessages
+                        .filter((m: any) => (m.scope || m.threadType) === consultScope)
+                        .map((msg: ConsultMessage) => (
+                          <div
+                            key={msg.id}
+                            className={`p-3 rounded-lg border text-xs max-w-lg ${
+                              msg.senderRole === activeRole
+                                ? 'bg-teal-50 border-teal-200 ms-auto text-teal-950'
+                                : 'bg-white border-slate-200 me-auto text-slate-900'
+                            }`}
+                          >
+                            <div className="flex justify-between items-center mb-1 text-[10px] text-slate-500 font-mono">
+                              <span className="font-bold text-slate-800">{msg.senderName} ({msg.senderRole})</span>
+                              <span>{msg.timestamp.substring(11, 16)}</span>
+                            </div>
+                            <p className="whitespace-pre-line leading-relaxed">{msg.content}</p>
+                          </div>
+                        ))
+                    )}
+                  </div>
+
+                  {/* Input form */}
+                  {activeRole !== 'PROGRAMME_ANALYST' ? (
+                    <div className="flex gap-2">
                       <input
                         type="text"
-                        value={closureNote}
-                        onChange={(e) => setClosureNote(e.target.value)}
-                        className="w-full p-1.5 border border-slate-300 rounded text-xs"
+                        value={consultText}
+                        onChange={(e) => setConsultText(e.target.value)}
+                        placeholder={`Type message to ${consultScope === 'PATIENT_TO_CLINICIAN' ? 'patient' : 'colleague'}...`}
+                        className="flex-1 p-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-teal-500"
                       />
+                      <button
+                        disabled={consultSending || !consultText.trim()}
+                        onClick={handleSendConsultMessage}
+                        className="px-4 py-2 bg-teal-600 text-white rounded-lg text-xs font-bold hover:bg-teal-700 disabled:opacity-40 shadow-sm"
+                      >
+                        Send
+                      </button>
                     </div>
-                  </div>
-                )}
-
-                {transitionError && (
-                  <div className="p-2 bg-red-50 border border-red-200 text-red-700 rounded text-xs">
-                    {transitionError}
-                  </div>
-                )}
-              </div>
-
-              {/* Outreach Logging Form */}
-              <div className="p-4 border border-slate-200 rounded-xl space-y-3 bg-white">
-                <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
-                  Log New Outreach Attempt
-                </h4>
-                <div className="grid grid-cols-3 gap-2">
-                  <select
-                    value={outreachChannel}
-                    onChange={(e) => setOutreachChannel(e.target.value as OutreachChannel)}
-                    className="p-1.5 border border-slate-300 rounded text-xs bg-white"
-                  >
-                    <option value="SMS">SMS</option>
-                    <option value="WHATSAPP">WHATSAPP</option>
-                    <option value="CALL">VOICE CALL</option>
-                    <option value="NAVIGATOR_VISIT">NAVIGATOR VISIT</option>
-                    <option value="CLINICIAN">CLINICIAN</option>
-                  </select>
-
-                  <select
-                    value={outreachOutcome}
-                    onChange={(e) => setOutreachOutcome(e.target.value as OutreachOutcome)}
-                    className="p-1.5 border border-slate-300 rounded text-xs bg-white"
-                  >
-                    <option value="ACKNOWLEDGED">ACKNOWLEDGED</option>
-                    <option value="DELIVERED">DELIVERED (NO RESPONSE)</option>
-                    <option value="NO_ANSWER">NO ANSWER</option>
-                    <option value="DECLINED">DECLINED</option>
-                    <option value="WRONG_NUMBER">WRONG NUMBER</option>
-                  </select>
-
-                  <select
-                    value={barrierReason}
-                    onChange={(e) => setBarrierReason(e.target.value as BarrierReason)}
-                    className="p-1.5 border border-slate-300 rounded text-xs bg-white"
-                  >
-                    <option value="">No Barrier Documented</option>
-                    <option value="FEAR_ANXIETY">FEAR_ANXIETY</option>
-                    <option value="APPOINTMENT_UNAVAILABLE">APPOINTMENT_UNAVAILABLE</option>
-                    <option value="COMPETING_PRIORITIES">COMPETING_PRIORITIES</option>
-                    <option value="COST_INSURANCE">COST_INSURANCE</option>
-                    <option value="LOW_HEALTH_LITERACY">LOW_HEALTH_LITERACY</option>
-                    <option value="COMMUNICATION_FAILURE">COMMUNICATION_FAILURE</option>
-                    <option value="TRANSPORT">TRANSPORT</option>
-                    <option value="UNREACHABLE">UNREACHABLE</option>
-                    <option value="OTHER">OTHER</option>
-                  </select>
+                  ) : (
+                    <div className="text-xs text-slate-400 italic">
+                      Programme Analyst role is read-only.
+                    </div>
+                  )}
                 </div>
+              )}
 
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={outreachNotes}
-                    onChange={(e) => setOutreachNotes(e.target.value)}
-                    placeholder="Outreach notes..."
-                    className="flex-1 p-1.5 border border-slate-300 rounded text-xs"
-                  />
-                  <button
-                    onClick={handleRecordOutreach}
-                    className="px-3 py-1.5 bg-slate-800 text-white rounded text-xs font-semibold hover:bg-slate-700"
-                  >
-                    Log Attempt
-                  </button>
-                </div>
-
-                {/* Generate AI Draft Button */}
-                <div className="pt-2 border-t border-slate-100 flex justify-end">
-                  <button
-                    disabled={aiGenerating}
-                    onClick={() => handleGenerateAiDraft(selectedCaseDetail.case.id)}
-                    className="px-3 py-1.5 bg-teal-50 text-teal-700 border border-teal-200 rounded text-xs font-semibold hover:bg-teal-100 disabled:opacity-50"
-                  >
-                    {aiGenerating ? 'Generating...' : t.generateAiDraft}
-                  </button>
-                </div>
-              </div>
-
-              {/* Outreach History */}
-              <div className="space-y-2">
-                <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
-                  Outreach Attempts History ({selectedCaseDetail.outreachAttempts.length})
-                </h4>
-                <div className="space-y-1 max-h-40 overflow-y-auto">
-                  {selectedCaseDetail.outreachAttempts.map((o: any) => (
-                    <div key={o.id} className="p-2 bg-slate-50 rounded border text-[11px] flex justify-between">
-                      <div>
-                        <span className="font-bold">{o.channel}</span> • <span className="font-mono">{o.outcome}</span>
-                        {o.barrierReason && <span className="text-red-600 ml-2">[{o.barrierReason}]</span>}
-                        {o.notes && <div className="text-slate-500 text-[10px] italic">{o.notes}</div>}
+              {/* SUBTAB 4: TIMELINE */}
+              {activeModalTab === 'timeline' && (
+                <div className="space-y-4">
+                  <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
+                    Append-Only Case Event Log ({selectedCaseDetail.events.length})
+                  </h4>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {selectedCaseDetail.events.map((evt: any) => (
+                      <div key={evt.id} className="p-3 bg-white rounded-lg border border-slate-200 text-xs space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="font-mono font-bold text-teal-700">
+                            {evt.fromState} → {evt.toState}
+                          </span>
+                          <span className="text-slate-400 font-mono text-[10px]">{evt.timestamp.substring(0, 16)}</span>
+                        </div>
+                        <div className="text-slate-700 text-[11px]">
+                          Trigger: <strong>{evt.trigger}</strong> • Actor: <strong>{evt.actorName || evt.actorId}</strong> ({evt.actorRole})
+                        </div>
+                        {evt.note && <div className="text-slate-500 text-[10px] italic">Note: "{evt.note}"</div>}
                       </div>
-                      <span className="text-slate-400 font-mono text-[10px]">{o.attemptedAt.substring(0, 16)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                    ))}
+                  </div>
 
-              {/* Case Event Timeline */}
-              <div className="space-y-2">
-                <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wide text-slate-500">
-                  Append-Only Case Event Log ({selectedCaseDetail.events.length})
-                </h4>
-                <div className="space-y-1 max-h-48 overflow-y-auto">
-                  {selectedCaseDetail.events.map((evt: any) => (
-                    <div key={evt.id} className="p-2 bg-white rounded border text-[11px] flex justify-between items-center">
-                      <div>
-                        <span className="font-mono font-bold text-slate-700">{evt.fromState} → {evt.toState}</span>
-                        <div className="text-slate-500 text-[10px]">{evt.trigger} ({evt.ownerRole})</div>
-                      </div>
-                      <span className="text-slate-400 font-mono text-[10px]">{evt.timestamp.substring(0, 16)}</span>
-                    </div>
-                  ))}
+                  <div className="pt-2 border-t border-slate-100 flex justify-between text-xs font-mono text-teal-700">
+                    <a
+                      href={`/api/fhir/r4/Task/${selectedCaseDetail.case.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:underline flex items-center gap-1"
+                    >
+                      ↗ View as FHIR R4 Task Resource (JSON)
+                    </a>
+                  </div>
                 </div>
-              </div>
-
-              {/* View FHIR Task Link */}
-              <div className="pt-2 border-t border-slate-100 flex justify-between text-xs font-mono text-teal-700">
-                <a
-                  href={`/api/fhir/r4/Task/${selectedCaseDetail.case.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:underline flex items-center gap-1"
-                >
-                  ↗ View as FHIR R4 Task Resource (JSON)
-                </a>
-              </div>
+              )}
             </div>
           </div>
         </div>

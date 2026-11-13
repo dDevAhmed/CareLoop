@@ -1,0 +1,246 @@
+{
+  "notice": "Clinician-approved patient screening communication templates with verified:false",
+  "syntheticFooter": "Synthetic demo content, not clinically reviewed.",
+  "templates": [
+    {
+      "id": "TPL-CRC-EN",
+      "pathwayId": "colorectal-uae",
+      "language": "en",
+      "approvedBy": "Dr. Mariam Al-Mansouri (Consultant Gastroenterologist, Lic. DoH-7721)",
+      "verified": false,
+      "testDisplayName": "Fecal Immunochemical Test (FIT)",
+      "headline": "Your screening test detected traces of blood that need a follow-up examination.",
+      "plainExplanation": "Your recent screening sample found microscopic traces of blood that are not visible to the naked eye. In most people, this is caused by minor, treatable conditions like small polyps, hemorrhoids, or mild inflammation. However, it is very important to examine the bowel lining to know for sure and keep you healthy.",
+      "actionNeeded": "The standard medical recommendation is a camera examination of the bowel (colonoscopy) within 31 working days. Our care team has created a priority referral for you.",
+      "criticalAlert": "URGENT CLINICAL PRIORITY: Traces of high-acuity findings detected. A designated clinical navigator will phone you within 4 hours. You can also contact our screening clinic directly.",
+      "simplifiedWording": "Let's make this simple: Your test found small traces of blood. It does NOT mean you have cancer. But we must look inside with a safe camera check to find the cause and remove any small growths before they can cause trouble.",
+      "understandingQuestions": [
+        {
+          "id": "CRC-Q1",
+          "question": "What does a positive FIT screening result mean?",
+          "options": [
+            "It definitely means I have advanced cancer.",
+            "It means microscopic traces of blood were found, which need a follow-up check.",
+            "It means the test failed and I do not need to do anything."
+          ],
+          "correctIndex": 1,
+          "plainExplanation": "A positive test only detects blood traces. Most cases are harmless polyps or minor issues, but we must investigate."
+        },
+        {
+          "id": "CRC-Q2",
+          "question": "What is the recommended next clinical step for you?",
+          "options": [
+            "Wait 2 years and repeat the stool test at home.",
+            "Schedule a colonoscopy (camera check) within 31 working days.",
+            "Start chemotherapy immediately."
+          ],
+          "correctIndex": 1,
+          "plainExplanation": "A colonoscopy within 31 working days is the international and national standard to check the colon lining."
+        },
+        {
+          "id": "CRC-Q3",
+          "question": "What happens if small growths (polyps) are found during the check?",
+          "options": [
+            "They can usually be painlessly removed during the procedure to prevent cancer.",
+            "They require major emergency surgery.",
+            "Nothing can be done."
+          ],
+          "correctIndex": 0,
+          "plainExplanation": "Removing polyps during colonoscopy stops cancer before it even starts. That is the power of screening!"
+        }
+      ]
+    },
+    {
+      "id": "TPL-CRC-AR",
+      "pathwayId": "colorectal-uae",
+      "language": "ar",
+      "approvedBy": "د. مريم المنصوري (استشارية أمراض الجهاز الهضمي، ترخيص دائرة الصحة 7721)",
+      "verified": false,
+      "testDisplayName": "فحص الدم الخفي في البراز (FIT)",
+      "headline": "أظهر فحصك الوقائي وجود آثار دم مجهرية تتطلب فحصاً تشخيصياً تكميلياً.",
+      "plainExplanation": "وجد الفحص الوقائي الأخير آثار دم مجهرية لا تُرى بالعين المجردة. لدى معظم الناس، تنتج هذه الآثار عن أسباب بسيطة وقابلة للعلاج مثل الزوائد اللحمية الصغيرة أو البواسير أو التهابات طفيفة. ومع ذلك، من الضروري جداً فحص بطانة القولون للتأكد والاطمئنان على صحتك.",
+      "actionNeeded": "التوصية الطبية المعتمدة هي إجراء تنظير للقولون خلال 31 يوم عمل. قام فريق الرعاية بإنشاء تحويل ذي أولوية لك.",
+      "criticalAlert": "أولوية سريرية عاجلة: أظهرت النتيجة مؤشرات تتطلب عناية سريعة. سيتصل بك منسق الرعاية خلال 4 ساعات. يمكنك أيضاً الاتصال بالعيادة مباشرة.",
+      "simplifiedWording": "بكل بساطة: أظهر فحصك وجود دم مجهري بسيط. هذا لا يعني أبداً إصابتك بالسرطان! لكن من الضروري إجراء فحص منظار بسيط لمعرفة السبب وإزالة أي زوائد قبل أن تتطور.",
+      "understandingQuestions": [
+        {
+          "id": "CRC-AR-Q1",
+          "question": "ماذا تعني النتيجة الإيجابية لفحص الدم الخفي في البراز؟",
+          "options": [
+            "تعني حتماً الإصابة بسرطان متقدم.",
+            "تعني وجود آثار دم مجهرية تتطلب فحصاً تشخيصياً لمعرفة السبب.",
+            "تعني أن الفحص ملغي ولا يلزم اتخاذ أي إجراء."
+          ],
+          "correctIndex": 1,
+          "plainExplanation": "النتيجة تعني وجود دم فقط، وغالباً ما تكون ناتجة عن زوائد حميدة يسهل علاجها."
+        },
+        {
+          "id": "CRC-AR-Q2",
+          "question": "ما هي الخطوة الطبية التالية الموصى بها؟",
+          "options": [
+            "الانتظار لمدة سنتين وإعادة الفحص المنزلي.",
+            "حجز موعد تنظير القولون خلال 31 يوم عمل.",
+            "البدء الفوري بالعلاج الكيماوي."
+          ],
+          "correctIndex": 1,
+          "plainExplanation": "تنظير القولون خلال 31 يوم عمل هو المعيار الطبي الوطني المعتمد للاطمئنان الكامل."
+        },
+        {
+          "id": "CRC-AR-Q3",
+          "question": "ماذا يحدث إذا تم العثور على زوائد لحمية صغيرة أثناء التنظير؟",
+          "options": [
+            "يمكن استئصالها بسهولة وأمان أثناء التنظير لمنع تحولها إلى أورام مستقبلاً.",
+            "تتطلب عملية جراحية كبرى طارئة.",
+            "لا يمكن فعل أي شيء."
+          ],
+          "correctIndex": 0,
+          "plainExplanation": "إزالة الزوائد أثناء المنظار يمنع المرض قبل بدايته، وهو الهدف الأساسي من الفحص المبكر."
+        }
+      ]
+    },
+    {
+      "id": "TPL-BRC-EN",
+      "pathwayId": "breast-abudhabi",
+      "language": "en",
+      "approvedBy": "Dr. Sarah Al-Zaabi (Consultant Breast Radiologist)",
+      "verified": false,
+      "testDisplayName": "Screening Mammography",
+      "headline": "Your mammogram identified an area that requires dedicated diagnostic imaging.",
+      "plainExplanation": "Your routine screening mammogram showed an area of breast tissue that requires closer examination with diagnostic mammography or ultrasound. An unexpected finding on a screening mammogram is very common; around 80% to 90% of women called back for diagnostic imaging do NOT have cancer, but instead have harmless cysts, dense tissue, or benign fibroadenomas.",
+      "actionNeeded": "We recommend an in-depth diagnostic imaging session and examination by a breast specialist within 15 to 20 working days.",
+      "criticalAlert": "FAST-TRACK NOTIFICATION: Highly suspicious imaging findings. A priority clinical consultation has been arranged within 24 hours.",
+      "simplifiedWording": "To be clear: Many women get called back after a routine mammogram. Most of the time it is just a harmless fluid cyst or overlapping tissue. A quick follow-up picture will give us a clear answer.",
+      "understandingQuestions": [
+        {
+          "id": "BRC-Q1",
+          "question": "Does being called back for further imaging mean you have breast cancer?",
+          "options": [
+            "Yes, a callback is a confirmed cancer diagnosis.",
+            "No, up to 90% of follow-up callbacks turn out to be benign (non-cancerous) findings.",
+            "It means the X-ray machine was broken."
+          ],
+          "correctIndex": 1,
+          "plainExplanation": "The vast majority of callbacks are benign cysts or dense tissue overlaps."
+        },
+        {
+          "id": "BRC-Q2",
+          "question": "What is the recommended next appointment for you?",
+          "options": [
+            "A diagnostic ultrasound or targeted imaging review with a specialist.",
+            "Immediate surgery without any further scans.",
+            "No follow-up is necessary until your next routine scan in 2 years."
+          ],
+          "correctIndex": 0,
+          "plainExplanation": "A focused diagnostic scan clarifies the picture and provides certainty."
+        },
+        {
+          "id": "BRC-Q3",
+          "question": "Why is timely follow-up within 15-20 working days important?",
+          "options": [
+            "Because early clarity provides peace of mind and allows immediate treatment if needed.",
+            "Because test results expire after 24 hours.",
+            "It is not important; you can ignore it."
+          ],
+          "correctIndex": 0,
+          "plainExplanation": "Prompt completion eliminates anxiety and ensures best clinical outcomes."
+        }
+      ]
+    },
+    {
+      "id": "TPL-BRC-AR",
+      "pathwayId": "breast-abudhabi",
+      "language": "ar",
+      "approvedBy": "د. سارة الزعابي (استشارية تصوير الثدي الشعاعي)",
+      "verified": false,
+      "testDisplayName": "تصوير الثدي الشعاعي (الماموجرام)",
+      "headline": "أظهر فحص الماموجرام منطقة تحتاج إلى تصوير تشخيصي إضافي للتأكد.",
+      "plainExplanation": "أظهر تصوير الثدي الروتيني وجود منطقة تحتاج إلى تدقيق أوضح بواسطة الموجات فوق الصوتية (السونار) أو تصوير تشخيصي مخصص. استدعاء المريضة لإجراء تصوير إضافي هو أمر شائع جداً؛ فأكثر من 80% إلى 90% من السيدات اللاتي يُطلَب منهن فحص تكميلي يتبيّن أن لديهن أسباباً حميدة تماماً مثل الأكياس المائية البسيطة أو التكلسات الحميدة أو تراكب الأنسجة الطبيعي.",
+      "actionNeeded": "نوصي بحجز موعد للفحص التشخيصي والاستشارة السريرية التخصصية خلال 15 إلى 20 يوم عمل.",
+      "criticalAlert": "تنبيه ذو أولوية خاصة: تم تحديد موعد استشارة سريعة مع الطبيب المختص خلال 24 ساعة لتقديم المشورة المباشرة.",
+      "simplifiedWording": "نود طمأنتك: طلب فحص إضافي هو إجراء روتيني لمعظم السيدات، وفي أكثر من 80% من الحالات يكون السبب كيس مائي بسيط أو أنسجة كثيفة طبيعية.",
+      "understandingQuestions": [
+        {
+          "id": "BRC-AR-Q1",
+          "question": "هل طلب فحص تصويري إضافي يعني بالضرورة الإصابة بالسرطان؟",
+          "options": [
+            "نعم، هذا تأكيد على الإصابة.",
+            "لا، أكثر من 80% إلى 90% من حالات الاستدعاء الإضافي تكون لأسباب حميدة تماماً.",
+            "يعني أن الفحص الأول غير صحيح."
+          ],
+          "correctIndex": 1,
+          "plainExplanation": "الغالبية العظمى من المراجعات الإضافية تكشف عن أكياس مائية أو كثافة نسيجية طبيعية حميدة."
+        },
+        {
+          "id": "BRC-AR-Q2",
+          "question": "ما هو الإجراء الطبي الموصى به الآن؟",
+          "options": [
+            "إجراء فحص تصوير تشخيصي أو تلفزيوني (سونار) متخصص.",
+            "إجراء عملية جراحية فورية بدون فحوصات أخرى.",
+            "تجاهل الأمر حتى الفحص الدوري بعد سنتين."
+          ],
+          "correctIndex": 0,
+          "plainExplanation": "الفحص التلفزيوني الإضافي يوضح الصورة تماماً ويمنحك راحة البال."
+        },
+        {
+          "id": "BRC-AR-Q3",
+          "question": "لماذا نوصي بإجراء الفحص الإضافي خلال 15-20 يوم عمل؟",
+          "options": [
+            "للحصول على الاطمئنان المبكر واستبعاد أي شكوك بدون تأخير.",
+            "لأن صلاحية الفحص تنتهي خلال 24 ساعة.",
+            "الموعد ليس مهماً ويمكن تأجيله لأي وقت."
+          ],
+          "correctIndex": 0,
+          "plainExplanation": "المتابعة المبكرة تزيل القلق وتضمن الحفاظ على صحتك بأعلى معايير الرعاية."
+        }
+      ]
+    },
+    {
+      "id": "TPL-GENERIC-EN",
+      "pathwayId": "default",
+      "language": "en",
+      "approvedBy": "CareLoop Clinical Steering Committee",
+      "verified": false,
+      "testDisplayName": "Preventive Health Screening Evaluation",
+      "headline": "Your screening result indicates that follow-up medical consultation is recommended.",
+      "plainExplanation": "Screening tests are designed to be sensitive so that even minor changes are detected early. An abnormal or positive result requires a diagnostic appointment to assess your health and discuss next steps.",
+      "actionNeeded": "Please attend your scheduled confirmatory appointment within the designated timeline.",
+      "criticalAlert": "CRITICAL ATTENTION: Please contact the care navigation team immediately for same-day coordination.",
+      "simplifiedWording": "Your test showed a result that we should check together. It is an early signal to help protect your health. Our team is here to guide you step-by-step.",
+      "understandingQuestions": [
+        {
+          "id": "GEN-Q1",
+          "question": "What is the purpose of this screening follow-up?",
+          "options": [
+            "To confirm your health status and provide early treatment if needed.",
+            "To bill your insurance for unneeded tests.",
+            "To replace routine doctors visits."
+          ],
+          "correctIndex": 0,
+          "plainExplanation": "Follow-up tests confirm whether any action is needed to keep you healthy."
+        },
+        {
+          "id": "GEN-Q2",
+          "question": "What should you do next?",
+          "options": [
+            "Confirm receipt and attend the recommended diagnostic consultation.",
+            "Ignore the message completely.",
+            "Stop taking all current medications."
+          ],
+          "correctIndex": 0,
+          "plainExplanation": "Attending the follow-up ensures timely resolution."
+        },
+        {
+          "id": "GEN-Q3",
+          "question": "Who can you contact if you have questions or barriers?",
+          "options": [
+            "Your dedicated CareLoop clinical navigator through this portal.",
+            "No one is available to help.",
+            "The emergency department only."
+          ],
+          "correctIndex": 0,
+          "plainExplanation": "Our patient navigators are dedicated to helping you with transport, appointments, and questions."
+        }
+      ]
+    }
+  ]
+}

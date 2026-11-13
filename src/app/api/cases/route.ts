@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStore, logAuditEvent } from '@/services/caseRepository';
-import { Case, UserRole } from '@/types';
+import { Case, UserRole, Urgency } from '@/types';
 import { computeMetricSummary } from '@/engine/metricsEngine';
 
 export async function GET(request: NextRequest) {
@@ -55,6 +55,30 @@ export async function GET(request: NextRequest) {
       return matchCaseNumber || matchResultId || matchPatientName || matchPatientArabic || matchExternalId;
     });
   }
+
+  // Queue sorted by service-level urgency with CRITICAL pinned to the top
+  const urgencyWeight: Record<Urgency, number> = {
+    CRITICAL: 3,
+    URGENT: 2,
+    ROUTINE: 1,
+  };
+
+  caseList.sort((a, b) => {
+    // 1. CRITICAL pinned first
+    const weightDiff = (urgencyWeight[b.urgency] || 0) - (urgencyWeight[a.urgency] || 0);
+    if (weightDiff !== 0) return weightDiff;
+
+    // 2. Overdue cases prioritized
+    if (a.isOverdue && !b.isOverdue) return -1;
+    if (!a.isOverdue && b.isOverdue) return 1;
+
+    // 3. Fewest working days remaining first
+    const daysDiff = (a.slaWorkingDaysRemaining ?? 999) - (b.slaWorkingDaysRemaining ?? 999);
+    if (daysDiff !== 0) return daysDiff;
+
+    // 4. Creation date
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 
   const total = caseList.length;
   const startIndex = (page - 1) * limit;

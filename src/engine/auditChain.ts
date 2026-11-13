@@ -43,13 +43,15 @@ export function createAuditLogEntry(params: {
   actorId: string;
   actorRole: UserRole;
   action: string;
-  resourceType: 'Case' | 'Patient' | 'Referral' | 'Appointment' | 'OutreachAttempt' | 'AiApprovalQueue';
+  resourceType: 'Case' | 'Patient' | 'Referral' | 'Appointment' | 'OutreachAttempt' | 'AiApprovalQueue' | 'ConsultMessage' | 'Consent' | 'DemoClock';
   resourceId: string;
   details: Record<string, unknown>;
   prevHash?: string;
   timestamp?: string;
+  realTimestamp?: string;
 }): AuditLogEntry {
   const timestamp = params.timestamp || new Date().toISOString();
+  const realTimestamp = params.realTimestamp || new Date().toISOString();
   const prevHash = params.prevHash || GENESIS_HASH;
 
   const hash = calculateAuditEntryHash({
@@ -68,6 +70,7 @@ export function createAuditLogEntry(params: {
     id: `AUDIT-${params.sequenceNumber}-${hash.substring(0, 10)}`,
     sequenceNumber: params.sequenceNumber,
     timestamp,
+    realTimestamp,
     actorId: params.actorId,
     actorRole: params.actorRole,
     action: params.action,

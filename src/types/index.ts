@@ -107,9 +107,46 @@ export interface CaseClosure {
   authoriserId: string;
   authoriserName: string;
   authoriserRole: UserRole;
+  requesterId?: string | null;
+  requesterName?: string | null;
+  requesterRole?: UserRole | null;
   clinicalEvidenceRef?: string | null; // e.g., diagnostic report ID, pathology reference
   closureNote: string;
   closedAt: string;
+}
+
+export interface UnderstandingAttempt {
+  id: string;
+  caseId: string;
+  attemptNumber: number; // 1 or 2
+  answers: number[];
+  score: number;
+  totalQuestions: number;
+  passed: boolean;
+  timestamp: string;
+}
+
+export interface ConsultMessage {
+  id: string;
+  caseId: string;
+  threadType: 'PATIENT_TO_CLINICIAN' | 'CLINICIAN_TO_CLINICIAN';
+  scope?: 'PATIENT_TO_CLINICIAN' | 'CLINICIAN_TO_CLINICIAN';
+  senderId: string;
+  senderName: string;
+  senderRole: UserRole;
+  content: string;
+  timestamp: string;
+}
+
+export interface DiagnosticReport {
+  reportId: string;
+  caseId: string;
+  disposition: string; // e.g., "Tubular adenoma excised with clean margins", "Benign cyst", "Carcinoma in situ"
+  findingsSummary: string;
+  histopathologyGrade?: string;
+  facilityName: string;
+  signedByClinician: string;
+  uploadedAt: string;
 }
 
 export interface Case {
@@ -132,8 +169,21 @@ export interface Case {
   milestones: CaseMilestones;
   clinicalDeadline: string; // Absolute due date computed skipping weekends
   platformSlaDueDate: string; // Intermediate SLA due date
+  slaWorkingDaysRemaining?: number;
   isOverdue: boolean;
   closure?: CaseClosure | null;
+  assignedOwner?: { id: string; name: string; role: UserRole } | null;
+  understandingAttempts?: UnderstandingAttempt[];
+  pendingAlternativeClosure?: {
+    requesterId: string;
+    requesterName: string;
+    requesterRole: UserRole;
+    reason: AuthorisedAlternativeReason;
+    note: string;
+    requestedAt: string;
+  } | null;
+  diagnosticReport?: DiagnosticReport | null;
+  events?: CaseEvent[];
   createdAt: string;
   updatedAt: string;
 }
@@ -173,11 +223,15 @@ export interface Referral {
   receivingFacilityName: string;
   specialty: string; // e.g. "Gastroenterology", "Breast Surgery"
   urgency: Urgency;
+  reason?: string;
+  clinicalSummary?: string;
+  attachments?: string[];
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
   rejectionReason?: string;
   snomedSpecialtyCode?: string; // Illustrative
   createdAt: string;
   acceptedAt?: string | null;
+  rejectedAt?: string | null;
 }
 
 export interface Appointment {
@@ -197,10 +251,11 @@ export interface AuditLogEntry {
   id: string;
   sequenceNumber: number;
   timestamp: string;
+  realTimestamp?: string;
   actorId: string;
   actorRole: UserRole;
   action: string;
-  resourceType: 'Case' | 'Patient' | 'Referral' | 'Appointment' | 'OutreachAttempt' | 'AiApprovalQueue';
+  resourceType: 'Case' | 'Patient' | 'Referral' | 'Appointment' | 'OutreachAttempt' | 'AiApprovalQueue' | 'ConsultMessage' | 'Consent' | 'DemoClock';
   resourceId: string;
   details: Record<string, unknown>;
   prevHash: string;
