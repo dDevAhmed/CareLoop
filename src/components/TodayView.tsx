@@ -3,6 +3,7 @@ import { Case, JurisdictionPack, UserRole } from '../types';
 import { formatHumanLabel, formatSlaText, getSlaProgressPercent } from '../utils/formatters';
 import { calculateDropOffRisk } from '../engine/aiProvider';
 import { CustomDropdown } from './CustomDropdown';
+import { Pagination } from './Pagination';
 
 interface TodayViewProps {
   cases: Case[];
@@ -28,6 +29,8 @@ export function TodayView({
   const [selectedOwner, setSelectedOwner] = useState<string>('all');
   const [selectedLang, setSelectedLang] = useState<string>('all');
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const PAGE_SIZE = 10;
 
   // Compute metrics for KPI cards
   const totalCases = cases.length;
@@ -112,14 +115,21 @@ export function TodayView({
     return pool;
   }, [cases, selectedQueueTab, selectedPathway, selectedOwner, selectedLang, searchQuery]);
 
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(filteredCases.length / PAGE_SIZE));
+  const paginatedCases = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredCases.slice(start, start + PAGE_SIZE);
+  }, [filteredCases, currentPage]);
+
   // Active selected case for 360px Drawer
   const activeDrawerCase = useMemo(() => {
     if (selectedCaseId) {
       const found = cases.find((c) => c.id === selectedCaseId);
       if (found) return found;
     }
-    return filteredCases[0] || null;
-  }, [selectedCaseId, filteredCases, cases]);
+    return paginatedCases[0] || null;
+  }, [selectedCaseId, paginatedCases, cases]);
 
   // Compute explainable risk score for the selected drawer case
   const drawerRiskScore = useMemo(() => {
@@ -251,7 +261,10 @@ export function TodayView({
             return (
               <button
                 key={tab.id}
-                onClick={() => setSelectedQueueTab(tab.id as QueueTab)}
+                onClick={() => {
+                  setSelectedQueueTab(tab.id as QueueTab);
+                  setCurrentPage(1);
+                }}
                 className={`flex items-center space-x-2 px-3 py-1.5 rounded-cl-sm text-sm font-semibold transition-colors ${
                   isTabActive
                     ? 'bg-cl-navy text-white shadow-sm'
@@ -280,7 +293,10 @@ export function TodayView({
           {/* Pathway Filter */}
           <CustomDropdown
             value={selectedPathway}
-            onChange={setSelectedPathway}
+            onChange={(val) => {
+              setSelectedPathway(val);
+              setCurrentPage(1);
+            }}
             options={[
               { value: 'all', label: 'All Pathways' },
               ...(activePack?.pathways.map((p) => ({ value: p.id, label: p.name })) || []),
@@ -292,7 +308,10 @@ export function TodayView({
           {/* Owner Filter */}
           <CustomDropdown
             value={selectedOwner}
-            onChange={setSelectedOwner}
+            onChange={(val) => {
+              setSelectedOwner(val);
+              setCurrentPage(1);
+            }}
             options={[
               { value: 'all', label: 'All Owners' },
               { value: 'unassigned', label: 'Unassigned Only' },
@@ -304,7 +323,10 @@ export function TodayView({
           {/* Language Filter */}
           <CustomDropdown
             value={selectedLang}
-            onChange={setSelectedLang}
+            onChange={(val) => {
+              setSelectedLang(val);
+              setCurrentPage(1);
+            }}
             options={[
               { value: 'all', label: 'All Languages' },
               { value: 'ar', label: 'Arabic (عربي)' },
@@ -341,7 +363,7 @@ export function TodayView({
                     </td>
                   </tr>
                 ) : (
-                  filteredCases.slice(0, 15).map((c) => {
+                  paginatedCases.map((c) => {
                     const isSelected = activeDrawerCase?.id === c.id;
                     const isCritical = c.urgency === 'CRITICAL';
                     const isOverdue = c.isOverdue;
@@ -458,14 +480,26 @@ export function TodayView({
             </table>
           </div>
 
-          {/* Table Footer with Count */}
-          <div className="p-3 border-t border-cl-border bg-cl-page-bg flex items-center justify-between text-xs text-cl-muted">
-            <span>
-              Showing {Math.min(filteredCases.length, 15)} of {filteredCases.length} filtered cases
-            </span>
-            <span className="font-medium text-cl-ink">
-              Total Cohort: {totalCases} cases
-            </span>
+          {/* Table Footer with Pagination */}
+          <div className="p-3.5 border-t border-cl-border bg-cl-page-bg flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-cl-muted">
+            <div className="flex items-center space-x-2">
+              <span>
+                Showing <strong className="text-cl-ink font-semibold">{filteredCases.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}</strong>–
+                <strong className="text-cl-ink font-semibold">{Math.min(currentPage * PAGE_SIZE, filteredCases.length)}</strong> of{' '}
+                <strong className="text-cl-ink font-semibold">{filteredCases.length}</strong> filtered cases
+              </span>
+              <span className="text-cl-border">|</span>
+              <span className="text-cl-muted">
+                Cohort: <strong className="text-cl-ink font-semibold">{totalCases}</strong>
+              </span>
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              size="sm"
+            />
           </div>
         </div>
 
