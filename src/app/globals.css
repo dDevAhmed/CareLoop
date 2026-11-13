@@ -1,18 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --color-teal: #087F83;
+  --color-deep-teal: #0F5E63;
+  --color-text-teal: #066468;
+  --color-navy: #142747;
+  --color-deep-slate-ink: #10282B;
+  --color-coral: #E98278;
+  --color-warm-coral: #E8684A;
+  --color-alert-text: #A8321F;
+  --color-alert-tint: #FCE4E1;
+  --color-page-bg: #F2F8F7;
+  --color-mist: #EAF4F3;
+  --color-calm-mist: #F4F8F7;
+  --color-white: #FFFFFF;
+  --color-border: #DCE7E6;
+  --color-muted-text: #55657B;
+  --color-neutral-chip: #E8EEF5;
+
+  --font-manrope: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --sidebar-width: 232px;
+  --drawer-width: 360px;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  background-color: var(--color-page-bg);
+  color: var(--color-deep-slate-ink);
+  font-family: var(--font-manrope);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 [dir="rtl"] {
-  font-family: "Noto Sans Arabic", "Segoe UI Arabic", Tahoma, Arial, sans-serif;
+  font-family: var(--font-manrope), "Noto Sans Arabic", "Segoe UI Arabic", Tahoma, Arial, sans-serif;
+}
+
+/* Custom scrollbars that match the brand */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-page-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-text);
 }

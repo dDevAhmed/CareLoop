@@ -6,6 +6,7 @@ import {
   computeStageAttrition,
   computeBarrierCounts,
   computeDisparityAnalysis,
+  computeSevenCoreIndicators,
 } from '@/engine/metricsEngine';
 
 export async function GET(request: NextRequest) {
@@ -25,12 +26,14 @@ export async function GET(request: NextRequest) {
   const attrition = computeStageAttrition(cases);
   const barrierCounts = computeBarrierCounts(store.outreachAttempts, cases);
   const disparity = computeDisparityAnalysis(cases, store.patients, pack.patientGroupFields);
+  const sevenIndicators = computeSevenCoreIndicators(cases, disparity);
 
   return NextResponse.json({
     packId: pack.id,
     packName: pack.name,
     patientGroupFields: pack.patientGroupFields,
     summary,
+    sevenIndicators,
     attrition,
     barrierCounts,
     disparity,

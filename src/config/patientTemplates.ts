@@ -56,3 +56,4 @@ export function getPatientResultTemplate(pathwayId: string, language: string = '
   // Generic fallback
   return templates.find((t) => t.pathwayId === 'default')!;
 }
+

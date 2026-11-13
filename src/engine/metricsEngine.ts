@@ -349,3 +349,59 @@ export function computeDisparityAnalysis(
     byAgeBand: formatGroups(byAgeBandMap),
   };
 }
+
+export interface SevenCoreIndicators {
+  notificationRate: number; // Indicator 1: Notification rate
+  acknowledgementRate: number; // Indicator 2: Acknowledgement rate
+  referralCompletionRate: number; // Indicator 3: Referral completion
+  appointmentAttendanceRate: number; // Indicator 4: Appointment attendance
+  clinicalResolutionRate: number; // Indicator 5: Clinical resolution
+  medianDaysToResolution: number | null; // Indicator 6: Median time to resolution
+  p90DaysToResolution: number | null; // Indicator 6b: P90 time to resolution
+  equityFollowUpGapPercent: number; // Indicator 7: Equity of follow-up (max disparity gap)
+}
+
+/**
+ * Extracts and consolidates the 7 primary closed-loop screening indicators.
+ */
+export function computeSevenCoreIndicators(
+  cases: Case[],
+  disparity?: DisparityAnalysis
+): SevenCoreIndicators {
+  const summary = computeMetricSummary(cases);
+
+  // Calculate disparity gap across unsuppressed groups
+  let maxRate = 0;
+  let minRate = 100;
+  let hasValidGroups = false;
+
+  if (disparity) {
+    const allGroups = [
+      ...disparity.byLanguage,
+      ...disparity.byAgeBand,
+      ...Object.values(disparity.byGroupField).flat(),
+    ].filter((g) => !g.suppressed && g.clinicalResolutionRate !== undefined);
+
+    for (const g of allGroups) {
+      if (g.clinicalResolutionRate !== undefined) {
+        hasValidGroups = true;
+        if (g.clinicalResolutionRate > maxRate) maxRate = g.clinicalResolutionRate;
+        if (g.clinicalResolutionRate < minRate) minRate = g.clinicalResolutionRate;
+      }
+    }
+  }
+
+  const equityGap = hasValidGroups ? Number((maxRate - minRate).toFixed(1)) : 0;
+
+  return {
+    notificationRate: summary.notificationRate,
+    acknowledgementRate: summary.acknowledgementRate,
+    referralCompletionRate: summary.referralAcceptedRate,
+    appointmentAttendanceRate: summary.appointmentAttendanceRate,
+    clinicalResolutionRate: summary.clinicalResolutionRate,
+    medianDaysToResolution: summary.medianDaysToResolution,
+    p90DaysToResolution: summary.p90DaysToResolution,
+    equityFollowUpGapPercent: equityGap,
+  };
+}
+

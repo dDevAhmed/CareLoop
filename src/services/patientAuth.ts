@@ -39,3 +39,4 @@ export function verifyPatientOwnsCase(
   if (!caseItem) return false;
   return caseItem.patientId === patient.id;
 }
+

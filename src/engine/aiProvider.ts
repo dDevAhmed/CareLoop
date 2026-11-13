@@ -1,9 +1,203 @@
-import { AiApprovalQueueItem, AiProvider, Case, Language, Patient, UserRole } from '../types';
+import {
+  AiApprovalQueueItem,
+  AiProvider,
+  Case,
+  Language,
+  Patient,
+  UserRole,
+  OutreachAttempt,
+  CaseEvent,
+  BarrierReason,
+} from '../types';
+
+export interface DropOffRiskFactor {
+  factor: string;
+  weight: number;
+  description: string;
+}
+
+export interface DropOffRiskScore {
+  score: number; // 0 - 100
+  level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  topFactors: DropOffRiskFactor[];
+  recommendedIntervention: string;
+}
+
+/**
+ * Calculates a fully transparent, explainable drop-off risk score based on
+ * explicit weighted risk rules.
+ */
+export function calculateDropOffRisk(
+  caseItem: Case,
+  events: CaseEvent[] = [],
+  outreachAttempts: OutreachAttempt[] = []
+): DropOffRiskScore {
+  const factors: DropOffRiskFactor[] = [];
+  let totalScore = 0;
+
+  // 1. Unacknowledged / Engagement Delay
+  const now = new Date();
+  const issuedTime = new Date(caseItem.createdAt).getTime();
+  const hoursSinceIssue = (now.getTime() - issuedTime) / (1000 * 60 * 60);
+
+  if (!caseItem.acknowledgedAt) {
+    if (hoursSinceIssue > 72 || caseItem.isOverdue) {
+      factors.push({
+        factor: 'UNACKNOWLEDGED_OVERDUE',
+        weight: 30,
+        description: 'Screening notification remains unacknowledged past the 72h SLA window.',
+      });
+      totalScore += 30;
+    } else if (hoursSinceIssue > 48) {
+      factors.push({
+        factor: 'UNACKNOWLEDGED_48H',
+        weight: 20,
+        description: 'Screening notification unacknowledged for > 48 hours.',
+      });
+      totalScore += 20;
+    }
+  }
+
+  // 2. Barrier Reasons Identified during outreach
+  const recentBarriers = outreachAttempts
+    .filter((o) => o.barrierReason)
+    .map((o) => o.barrierReason as BarrierReason);
+
+  if (recentBarriers.includes('COMMUNICATION_FAILURE') || recentBarriers.includes('LOW_HEALTH_LITERACY')) {
+    factors.push({
+      factor: 'HEALTH_LITERACY_OR_COMMUNICATION_BARRIER',
+      weight: 25,
+      description: 'Understanding check failed or communication barrier recorded by care team.',
+    });
+    totalScore += 25;
+  }
+
+  if (recentBarriers.includes('TRANSPORT') || recentBarriers.includes('FINANCIAL_OR_INSURANCE')) {
+    factors.push({
+      factor: 'LOGISTICAL_OR_INSURANCE_BARRIER',
+      weight: 20,
+      description: 'Patient reported structural transport or insurance coverage impediment.',
+    });
+    totalScore += 20;
+  }
+
+  if (recentBarriers.includes('FEAR_OR_ANXIETY')) {
+    factors.push({
+      factor: 'PSYCHOSOCIAL_AVOIDANCE',
+      weight: 15,
+      description: 'Patient exhibited significant apprehension or procedural avoidance.',
+    });
+    totalScore += 15;
+  }
+
+  // 3. Referral or Facility Stagnation
+  if (caseItem.currentState === 'REJECTED') {
+    factors.push({
+      factor: 'REFERRAL_REJECTED',
+      weight: 35,
+      description: 'Specialist facility rejected referral. Case stalled without active clinic destination.',
+    });
+    totalScore += 35;
+  } else if (caseItem.currentState === 'REFERRAL_SENT' && !caseItem.referralAcceptedAt) {
+    factors.push({
+      factor: 'REFERRAL_PENDING_ACCEPTANCE',
+      weight: 15,
+      description: 'Referral sent to diagnostic facility but not yet accepted.',
+    });
+    totalScore += 15;
+  }
+
+  // 4. Clinical Urgency without Attendance
+  if (caseItem.urgency === 'CRITICAL' && !caseItem.attendedAt) {
+    factors.push({
+      factor: 'CRITICAL_URGENCY_UNATTENDED',
+      weight: 20,
+      description: 'High-risk screening result requiring rapid follow-up is not yet attended.',
+    });
+    totalScore += 20;
+  }
+
+  // 5. Overdue Status
+  if (caseItem.isOverdue) {
+    factors.push({
+      factor: 'SLA_BREACH_OVERDUE',
+      weight: 25,
+      description: 'Case has exceeded jurisdiction clinical deadline SLA.',
+    });
+    totalScore += 25;
+  }
+
+  // Baseline risk
+  const finalScore = Math.min(100, Math.max(5, totalScore || 10));
+
+  let level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
+  if (finalScore >= 75) level = 'CRITICAL';
+  else if (finalScore >= 50) level = 'HIGH';
+  else if (finalScore >= 25) level = 'MEDIUM';
+
+  // Sort top factors by weight
+  const sortedFactors = factors.sort((a, b) => b.weight - a.weight);
+
+  // Derive recommended intervention
+  let recommendedIntervention = 'Continue standard automated multi-channel protocol.';
+  if (level === 'CRITICAL') {
+    recommendedIntervention = 'Immediate same-day telephone navigation and secondary facility reassignment.';
+  } else if (level === 'HIGH') {
+    recommendedIntervention = 'Schedule proactive navigator voice outreach; assess barrier causes.';
+  } else if (level === 'MEDIUM') {
+    recommendedIntervention = 'Dispatch bilingual SMS reminder and queue for navigator review within 48h.';
+  }
+
+  return {
+    score: finalScore,
+    level,
+    topFactors: sortedFactors,
+    recommendedIntervention,
+  };
+}
+
+/**
+ * Generates an executive hand-off summary for multidisciplinary team transfer.
+ */
+export function generateHandoffSummary(
+  caseItem: Case,
+  patient: Patient,
+  events: CaseEvent[] = [],
+  outreachAttempts: OutreachAttempt[] = []
+): string {
+  const isUrgent = caseItem.urgency === 'CRITICAL' || caseItem.urgency === 'URGENT';
+  const barriers = outreachAttempts.filter((o) => o.barrierReason).map((o) => o.barrierReason);
+  const barrierText = barriers.length > 0 ? Array.from(new Set(barriers)).join(', ') : 'None recorded';
+
+  return `[CareLoop Clinical Hand-off Summary]
+Patient: ${patient.fullName} (${patient.gender}, DOB: ${patient.dateOfBirth})
+Case ID: ${caseItem.caseNumber} | Pathway: ${caseItem.pathwayId.toUpperCase()}
+Current Stage: ${caseItem.currentState} | Urgency: ${caseItem.urgency} ${isUrgent ? '⚠️ PRIORITY' : ''}
+Clinical Deadline: ${new Date(caseItem.clinicalDeadline).toLocaleDateString()} (${caseItem.slaWorkingDaysRemaining} working days remaining)
+SLA Status: ${caseItem.isOverdue ? 'EXCEEDED (OVERDUE)' : 'ON TRACK'}
+Identified Barriers: ${barrierText}
+Total Outreach Attempts: ${outreachAttempts.length}
+Key Milestone Progress:
+- Notified: ${caseItem.notificationDeliveredAt ? 'Yes' : 'No'}
+- Acknowledged: ${caseItem.acknowledgedAt ? 'Yes' : 'No'}
+- Understanding Confirmed: ${caseItem.understandingConfirmedAt ? 'Yes' : 'No'}
+- Referral Created: ${caseItem.referralCreatedAt ? 'Yes' : 'No'}
+- Diagnostic Disposition: ${caseItem.diagnosticDispositionDocumentedAt ? 'Yes' : 'No'}
+Next Best Action: ${
+    caseItem.currentState === 'REJECTED'
+      ? 'Reassign referral to accredited secondary diagnostic center.'
+      : !caseItem.acknowledgedAt
+      ? 'Conduct structured phone navigation to secure acknowledgment and address patient questions.'
+      : !caseItem.appointmentBookedAt
+      ? 'Facilitate direct appointment booking at receiving endoscopy or imaging suite.'
+      : 'Verify appointment attendance and obtain pathology report.'
+  }`;
+}
 
 /**
  * Mock implementation of the CareLoop AI Provider.
  * Strictly deterministic and local with ZERO external API calls.
- * Provides culturally nuanced, multilingual notification templates.
+ * Provides culturally nuanced, multilingual notification templates and safety checks.
  */
 export class MockAiProvider implements AiProvider {
   name = 'MockCareLoopGenAI-v1.0-Local';
@@ -67,6 +261,7 @@ export function createApprovalQueueItem(params: {
   modelIdentifier: string;
   language: Language;
   contentType?: 'PATIENT_NOTIFICATION' | 'NAVIGATION_SCRIPT' | 'CLINICAL_SUMMARY';
+  clinicalFacts?: string;
 }): AiApprovalQueueItem {
   return {
     id: `AI-REV-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -79,7 +274,7 @@ export function createApprovalQueueItem(params: {
     status: 'PENDING_REVIEW',
     reviewerId: null,
     reviewerRole: null,
-    reviewNotes: null,
+    reviewNotes: params.clinicalFacts || null,
     reviewedAt: null,
     sentAt: null,
     createdAt: new Date().toISOString(),
@@ -107,7 +302,7 @@ export function approveQueueItem(
     draftContent: options?.modifiedContent || item.draftContent,
     reviewerId,
     reviewerRole,
-    reviewNotes: options?.reviewNotes || null,
+    reviewNotes: options?.reviewNotes || item.reviewNotes || null,
     reviewedAt: now,
     sentAt: now,
   };

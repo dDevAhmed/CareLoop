@@ -6,6 +6,16 @@ export const metadata: Metadata = {
   description:
     'Future Health Digital Innovation Challenge prototype: Active tracking, outreach ladder, navigation, and closed-loop diagnostic resolution.',
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon-16x16.png', type: 'image/png', sizes: '16x16' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -15,7 +25,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased min-h-screen bg-slate-50 text-slate-900">
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
+      <body className="antialiased min-h-screen">
         {children}
         <script
           dangerouslySetInnerHTML={{
@@ -34,4 +48,3 @@ export default function RootLayout({
     </html>
   );
 }
-
