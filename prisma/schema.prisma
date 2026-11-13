@@ -1,0 +1,297 @@
+// CareLoop Prisma Schema
+// PostgreSQL dialect for production with full relational support
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CaseState {
+  RESULT_ISSUED
+  PATIENT_NOTIFIED
+  ACKNOWLEDGED
+  CONFIRMATORY_TEST
+  REFERRAL_SENT
+  REFERRAL_ACCEPTED
+  APPOINTMENT_BOOKED
+  ATTENDED
+  DIAGNOSTIC_DISPOSITION_DOCUMENTED
+  TREATMENT_OR_SURVEILLANCE
+  CLOSED
+  REJECTED
+  ESCALATED
+}
+
+enum Urgency {
+  ROUTINE
+  URGENT
+  CRITICAL
+}
+
+enum UserRole {
+  PATIENT
+  CLINICIAN
+  NAVIGATOR
+  PROGRAMME_ANALYST
+}
+
+enum Language {
+  en
+  ar
+}
+
+enum NationalityGroup {
+  EMIRATI
+  ARAB_EXPAT
+  SOUTH_ASIAN_EXPAT
+  WESTERN_EXPAT
+  EAST_ASIAN_EXPAT
+  OTHER
+}
+
+enum OutreachChannel {
+  SMS
+  WHATSAPP
+  CALL
+  NAVIGATOR_VISIT
+  CLINICIAN
+}
+
+enum OutreachOutcome {
+  DELIVERED
+  NO_ANSWER
+  ACKNOWLEDGED
+  DECLINED
+  WRONG_NUMBER
+}
+
+enum ClosureType {
+  CLINICAL_RESOLUTION
+  AUTHORISED_ALTERNATIVE
+}
+
+enum AuthorisedAlternativeReason {
+  INFORMED_REFUSAL
+  TRANSFERRED_CARE
+  DECEASED
+  UNREACHABLE_AFTER_CONFIGURED_ATTEMPTS
+  OTHER
+}
+
+enum BarrierReason {
+  COST_INSURANCE
+  TRANSPORT
+  FEAR_ANXIETY
+  LOW_HEALTH_LITERACY
+  COMMUNICATION_FAILURE
+  APPOINTMENT_UNAVAILABLE
+  WORKFORCE_CAPACITY
+  COMPETING_PRIORITIES
+  UNREACHABLE
+  OTHER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      UserRole
+  language  Language @default(en)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignedCases Case[] @relation("AssignedCases")
+}
+
+model Patient {
+  id                String           @id @default(cuid())
+  externalPatientId String           @unique
+  synthetic         Boolean          @default(true)
+  fullName          String
+  fullNameArabic    String?
+  dateOfBirth       DateTime
+  gender            String
+  language          Language         @default(ar)
+  nationalityGroup  NationalityGroup @default(EMIRATI)
+  emirate           String           @default("Abu Dhabi")
+  phone             String
+  email             String?
+  consentFlags      Json
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  cases             Case[]
+}
+
+model Case {
+  id                String    @id @default(cuid())
+  caseNumber        String    @unique
+  synthetic         Boolean   @default(true)
+  patientId         String
+  patient           Patient   @relation(fields: [patientId], references: [id])
+  pathwayId         String
+  currentState      CaseState @default(RESULT_ISSUED)
+  previousState     CaseState?
+  urgency           Urgency   @default(ROUTINE)
+
+  primaryOwnerId    String?
+  primaryOwnerRole  UserRole?
+  primaryOwner      User?     @relation("AssignedCases", fields: [primaryOwnerId], references: [id])
+
+  screeningResultId String
+  screeningTestType String
+  screeningTestDate DateTime
+  snomedCode        String?
+  loincCode         String?
+
+  // Explicit milestones as specified in Phase 1 Amendments
+  notificationDeliveredAt           DateTime?
+  acknowledgedAt                    DateTime?
+  understandingConfirmedAt          DateTime?
+  referralCreatedAt                 DateTime?
+  referralAcceptedAt                DateTime?
+  appointmentBookedAt               DateTime?
+  attendedAt                        DateTime?
+  diagnosticDispositionDocumentedAt DateTime?
+
+  // SLA tracking
+  clinicalDeadline                  DateTime
+  platformSlaDueDate                DateTime
+  isOverdue                         Boolean   @default(false)
+
+  // Closure Governance
+  closureType                       ClosureType?
+  closureAuthorisedReason           AuthorisedAlternativeReason?
+  closureAuthoriserId               String?
+  closureAuthoriserName             String?
+  closureAuthoriserRole             UserRole?
+  closureEvidenceRef                String?
+  closureNote                       String?
+  closedAt                          DateTime?
+
+  createdAt                         DateTime  @default(now())
+  updatedAt                         DateTime  @updatedAt
+
+  events                            CaseEvent[]
+  outreachAttempts                  OutreachAttempt[]
+  referrals                         Referral[]
+  appointments                      Appointment[]
+  aiQueueItems                      AiApprovalQueue[]
+
+  @@index([patientId])
+  @@index([currentState])
+  @@index([urgency])
+  @@index([pathwayId])
+}
+
+model CaseEvent {
+  id            String        @id @default(cuid())
+  caseId        String
+  caseItem      Case          @relation(fields: [caseId], references: [id])
+  fromState     CaseState
+  toState       CaseState
+  trigger       String
+  ownerId       String
+  ownerRole     UserRole
+  timestamp     DateTime      @default(now())
+  barrierReason BarrierReason?
+  metadata      Json?
+
+  @@index([caseId])
+  @@index([timestamp])
+}
+
+model OutreachAttempt {
+  id            String          @id @default(cuid())
+  caseId        String
+  caseItem      Case            @relation(fields: [caseId], references: [id])
+  channel       OutreachChannel
+  outcome       OutreachOutcome
+  attemptedAt   DateTime        @default(now())
+  byRole        UserRole
+  byUserId      String
+  barrierReason BarrierReason?
+  notes         String?
+
+  @@index([caseId])
+  @@index([attemptedAt])
+}
+
+model Referral {
+  id                    String    @id @default(cuid())
+  caseId                String
+  caseItem              Case      @relation(fields: [caseId], references: [id])
+  synthetic             Boolean   @default(true)
+  referringProviderId   String
+  referringProviderName String
+  receivingFacilityId   String
+  receivingFacilityName String
+  specialty             String
+  urgency               Urgency   @default(ROUTINE)
+  status                String    @default("PENDING")
+  rejectionReason       String?
+  snomedSpecialtyCode   String?
+  createdAt             DateTime  @default(now())
+  acceptedAt            DateTime?
+
+  @@index([caseId])
+}
+
+model Appointment {
+  id                 String         @id @default(cuid())
+  caseId             String
+  caseItem           Case           @relation(fields: [caseId], references: [id])
+  referralId         String?
+  facilityId         String
+  facilityName       String
+  appointmentDate    DateTime
+  status             String         @default("SCHEDULED")
+  cancellationReason BarrierReason?
+  attendedAt         DateTime?
+  createdAt          DateTime       @default(now())
+
+  @@index([caseId])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  sequenceNumber Int      @unique
+  timestamp      DateTime @default(now())
+  actorId        String
+  actorRole      UserRole
+  action         String
+  resourceType   String
+  resourceId     String
+  details        Json
+  prevHash       String
+  hash           String   @unique
+
+  @@index([sequenceNumber])
+  @@index([timestamp])
+}
+
+model AiApprovalQueue {
+  id               String    @id @default(cuid())
+  caseId           String
+  caseItem         Case      @relation(fields: [caseId], references: [id])
+  patientId        String
+  generatedByModel String
+  contentType      String    @default("PATIENT_NOTIFICATION")
+  language         Language  @default(ar)
+  draftContent     String
+  status           String    @default("PENDING_REVIEW")
+  reviewerId       String?
+  reviewerRole     UserRole?
+  reviewNotes      String?
+  reviewedAt       DateTime?
+  sentAt           DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([caseId])
+  @@index([status])
+}
+

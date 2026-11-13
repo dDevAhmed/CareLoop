@@ -1,0 +1,186 @@
+{
+  "id": "abu-dhabi",
+  "name": "Abu Dhabi Health Authority Standard (Hero)",
+  "nameLocalized": "معيار هيئة الصحة بأبوظبي (المعيار الرئيسي)",
+  "description": "Hero configuration for Abu Dhabi ambulatory care clinics: FIT-positive 31 working days and breast 15-day communication standard.",
+  "version": "1.2.0",
+  "workingDayCalendar": {
+    "weekendDays": [0, 6],
+    "holidays": [
+      "2026-01-01",
+      "2026-04-08",
+      "2026-04-09",
+      "2026-06-16",
+      "2026-12-02",
+      "2026-12-03"
+    ]
+  },
+  "languages": [
+    {
+      "code": "ar",
+      "name": "Arabic",
+      "nameLocalized": "العربية",
+      "isRtl": true
+    },
+    {
+      "code": "en",
+      "name": "English",
+      "nameLocalized": "الإنجليزية",
+      "isRtl": false
+    }
+  ],
+  "defaultLanguage": "ar",
+  "patientGroupFields": [
+    {
+      "id": "nationalityGroup",
+      "label": "Nationality Group",
+      "labelLocalized": "المجموعة السكانية / الجنسية",
+      "options": [
+        { "id": "EMIRATI", "label": "UAE National (Emirati)", "labelLocalized": "مواطن إماراتي" },
+        { "id": "ARAB_EXPAT", "label": "Arab Expatriate", "labelLocalized": "مقيم عربي" },
+        { "id": "SOUTH_ASIAN_EXPAT", "label": "South Asian Expatriate", "labelLocalized": "مقيم من جنوب آسيا" },
+        { "id": "WESTERN_EXPAT", "label": "Western Expatriate", "labelLocalized": "مقيم غربي" },
+        { "id": "EAST_ASIAN_EXPAT", "label": "East Asian Expatriate", "labelLocalized": "مقيم من شرق آسيا" },
+        { "id": "OTHER", "label": "Other Nationalities", "labelLocalized": "جنسيات أخرى" }
+      ]
+    },
+    {
+      "id": "region",
+      "label": "Emirate Region",
+      "labelLocalized": "منطقة الإمارة",
+      "options": [
+        { "id": "ABU_DHABI", "label": "Abu Dhabi Central", "labelLocalized": "أبوظبي" },
+        { "id": "AL_AIN", "label": "Al Ain", "labelLocalized": "العين" },
+        { "id": "AL_DHAFRA", "label": "Al Dhafra", "labelLocalized": "الظفرة" }
+      ]
+    }
+  ],
+  "enabledChannels": ["SMS", "WHATSAPP", "CALL", "NAVIGATOR_VISIT", "CLINICIAN"],
+  "terminologyPlaceholders": {
+    "screeningCodeSystemName": "LOINC (Standard Clinical Observations Subset)",
+    "confirmatoryCodeSystemName": "SNOMED CT (UAE Affiliate Licensing Subset)",
+    "licenseNotice": "Code system names and placeholder references only. Full production catalogues require national affiliate license."
+  },
+  "dataGovernanceNotes": "Abu Dhabi Department of Health health information exchange (Malaffi) alignment. Phase 1 evaluation operates exclusively on 100% synthetic patient profiles.",
+  "pathways": [
+    {
+      "id": "colorectal-uae",
+      "name": "Colorectal Cancer Screening Pathway",
+      "nameLocalized": "مسار فحص سرطان القولون والمستقيم",
+      "jurisdiction": "Abu Dhabi / UAE",
+      "sourceRef": "UAE National Guidelines for Colorectal Cancer Screening & DoH Standard for Cancer Screening",
+      "sourceUrl": "https://doh.gov.ae/en/resources/standards",
+      "verified": false,
+      "referenceOnly": false,
+      "clinicalDeadlineWorkingDays": 31,
+      "referralTargetPercent": 90,
+      "urgencyClasses": [
+        { "id": "ROUTINE", "label": "Routine Screening", "bypassRoutineSla": false },
+        { "id": "URGENT", "label": "Urgent Diagnostic Triage", "bypassRoutineSla": false },
+        { "id": "CRITICAL", "label": "Critical Red-Flag Finding", "bypassRoutineSla": true, "targetHours": 4 }
+      ],
+      "platformSlaHours": {
+        "ingestMaxHours": 24,
+        "acknowledgementMaxHours": 72,
+        "referralAcceptanceWorkingDays": 2,
+        "closureDocumentationWorkingDays": 1
+      },
+      "escalationLadder": [
+        {
+          "step": 1,
+          "delayWorkingDays": 0,
+          "channel": "SMS",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 0: Bilingual SMS result notification with verification link"
+        },
+        {
+          "step": 2,
+          "delayWorkingDays": 3,
+          "channel": "CALL",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 3: Interactive telephone call to address barriers"
+        },
+        {
+          "step": 3,
+          "delayWorkingDays": 7,
+          "channel": "NAVIGATOR_VISIT",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 7: In-person clinic navigation session"
+        },
+        {
+          "step": 4,
+          "delayWorkingDays": 10,
+          "channel": "CLINICIAN",
+          "assignedRole": "CLINICIAN",
+          "description": "Overdue Clinician Escalation: Lead physician case review"
+        }
+      ],
+      "codes": {
+        "screeningCode": "14563-1",
+        "screeningDisplay": "Fecal occult blood by immunoassay [FIT] in stool",
+        "confirmatoryCode": "73761001",
+        "confirmatoryDisplay": "Colonoscopy procedure"
+      }
+    },
+    {
+      "id": "breast-abudhabi",
+      "name": "Breast Cancer Screening Pathway",
+      "nameLocalized": "مسار فحص سرطان الثدي",
+      "jurisdiction": "Abu Dhabi",
+      "sourceRef": "DoH Abu Dhabi Cancer Prevention and Screening Standard (15-day communication)",
+      "sourceUrl": "https://doh.gov.ae/en/resources/standards",
+      "verified": false,
+      "referenceOnly": false,
+      "clinicalDeadlineWorkingDays": 15,
+      "referralTargetPercent": 95,
+      "urgencyClasses": [
+        { "id": "ROUTINE", "label": "Routine Screening", "bypassRoutineSla": false },
+        { "id": "URGENT", "label": "Urgent Diagnostic Triage", "bypassRoutineSla": false },
+        { "id": "CRITICAL", "label": "Critical Suspicious Mass (BI-RADS 5)", "bypassRoutineSla": true, "targetHours": 4 }
+      ],
+      "platformSlaHours": {
+        "ingestMaxHours": 24,
+        "acknowledgementMaxHours": 48,
+        "referralAcceptanceWorkingDays": 2,
+        "closureDocumentationWorkingDays": 1
+      },
+      "escalationLadder": [
+        {
+          "step": 1,
+          "delayWorkingDays": 0,
+          "channel": "WHATSAPP",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 0: Secure bilingual WhatsApp notification"
+        },
+        {
+          "step": 2,
+          "delayWorkingDays": 2,
+          "channel": "CALL",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 2: Nurse navigator phone outreach"
+        },
+        {
+          "step": 3,
+          "delayWorkingDays": 5,
+          "channel": "NAVIGATOR_VISIT",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 5: Urgent clinical navigation coordinator review"
+        },
+        {
+          "step": 4,
+          "delayWorkingDays": 8,
+          "channel": "CLINICIAN",
+          "assignedRole": "CLINICIAN",
+          "description": "Overdue Clinician Escalation: Specialist breast surgeon review"
+        }
+      ],
+      "codes": {
+        "screeningCode": "24604-5",
+        "screeningDisplay": "Mammography screening bilateral",
+        "confirmatoryCode": "392011003",
+        "confirmatoryDisplay": "Diagnostic breast ultrasound and core biopsy"
+      }
+    }
+  ]
+}
+

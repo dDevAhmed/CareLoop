@@ -1,0 +1,204 @@
+{
+  "id": "who-reference",
+  "name": "WHO Global & International Reference",
+  "description": "Benchmark international guidelines including WHO 90-70-90 cervical elimination, 60-day breast diagnostic resolution, and Ontario FIT follow-up standards.",
+  "version": "1.0.0",
+  "workingDayCalendar": {
+    "weekendDays": [0, 6],
+    "holidays": ["2026-01-01", "2026-07-01", "2026-12-25"]
+  },
+  "languages": [
+    {
+      "code": "en",
+      "name": "English",
+      "isRtl": false
+    }
+  ],
+  "defaultLanguage": "en",
+  "patientGroupFields": [
+    {
+      "id": "residencyStatus",
+      "label": "Residency Status",
+      "options": [
+        { "id": "CITIZEN", "label": "National Citizen" },
+        { "id": "PERMANENT_RESIDENT", "label": "Permanent Resident" },
+        { "id": "TEMPORARY_RESIDENT", "label": "Temporary Resident / Work Permit" },
+        { "id": "REFUGEE_ASYLUM", "label": "Protected Person / Asylum Seeker" }
+      ]
+    },
+    {
+      "id": "ageBand",
+      "label": "Age Group",
+      "options": [
+        { "id": "<40", "label": "Under 40" },
+        { "id": "40-49", "label": "Age 40-49" },
+        { "id": "50-59", "label": "Age 50-59" },
+        { "id": "60-69", "label": "Age 60-69" },
+        { "id": "70+", "label": "Age 70+" }
+      ]
+    }
+  ],
+  "enabledChannels": ["SMS", "CALL", "NAVIGATOR_VISIT", "CLINICIAN"],
+  "terminologyPlaceholders": {
+    "screeningCodeSystemName": "WHO Global Screening Test Catalogue",
+    "confirmatoryCodeSystemName": "ICD-11 / SNOMED CT International",
+    "licenseNotice": "Non-commercial reference placeholders. Clinical implementations require local health system coding crosswalks."
+  },
+  "dataGovernanceNotes": "Global health benchmark reference pack. Formulated to assess health equity across international cancer elimination goals.",
+  "pathways": [
+    {
+      "id": "cervical-who",
+      "name": "WHO Cervical Cancer Elimination Target (90-70-90)",
+      "jurisdiction": "WHO Global",
+      "sourceRef": "WHO Global Strategy to Accelerate the Elimination of Cervical Cancer (Pillar 3: 90% of women identified with cervical disease receive treatment)",
+      "sourceUrl": "https://www.who.int/publications/i/item/9789240014107",
+      "verified": false,
+      "referenceOnly": true,
+      "clinicalDeadlineWorkingDays": 30,
+      "referralTargetPercent": 90,
+      "urgencyClasses": [
+        { "id": "ROUTINE", "label": "Routine Primary Screening", "bypassRoutineSla": false },
+        { "id": "URGENT", "label": "High-Risk HPV 16/18 Positive", "bypassRoutineSla": false },
+        { "id": "CRITICAL", "label": "Suspected Invasive Lesion", "bypassRoutineSla": true, "targetHours": 24 }
+      ],
+      "platformSlaHours": {
+        "ingestMaxHours": 24,
+        "acknowledgementMaxHours": 72,
+        "referralAcceptanceWorkingDays": 3,
+        "closureDocumentationWorkingDays": 2
+      },
+      "escalationLadder": [
+        {
+          "step": 1,
+          "delayWorkingDays": 0,
+          "channel": "SMS",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 0: Standard screening result message"
+        },
+        {
+          "step": 2,
+          "delayWorkingDays": 5,
+          "channel": "CALL",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 5: Community health worker follow-up call"
+        },
+        {
+          "step": 3,
+          "delayWorkingDays": 12,
+          "channel": "CLINICIAN",
+          "assignedRole": "CLINICIAN",
+          "description": "Day 12: Clinician escalation for colposcopy triage"
+        }
+      ],
+      "codes": {
+        "screeningCode": "21440-3",
+        "screeningDisplay": "Human papilloma virus 16+18+45 DNA [Presence] in Cervix",
+        "confirmatoryCode": "285854004",
+        "confirmatoryDisplay": "Colposcopy of cervix with biopsy"
+      }
+    },
+    {
+      "id": "breast-who-60day",
+      "name": "WHO Global Breast Cancer Initiative (60-Day Resolution)",
+      "jurisdiction": "WHO Global",
+      "sourceRef": "WHO Global Breast Cancer Initiative Implementation Framework (Diagnostic resolution completed within 60 calendar days of initial presentation)",
+      "sourceUrl": "https://www.who.int/publications/i/item/9789240071384",
+      "verified": false,
+      "referenceOnly": true,
+      "clinicalDeadlineWorkingDays": 42,
+      "referralTargetPercent": 85,
+      "urgencyClasses": [
+        { "id": "ROUTINE", "label": "Screening Follow-up", "bypassRoutineSla": false },
+        { "id": "URGENT", "label": "Palpable Breast Finding", "bypassRoutineSla": false },
+        { "id": "CRITICAL", "label": "Inflammatory or Rapidly Progressing Mass", "bypassRoutineSla": true, "targetHours": 12 }
+      ],
+      "platformSlaHours": {
+        "ingestMaxHours": 24,
+        "acknowledgementMaxHours": 72,
+        "referralAcceptanceWorkingDays": 5,
+        "closureDocumentationWorkingDays": 2
+      },
+      "escalationLadder": [
+        {
+          "step": 1,
+          "delayWorkingDays": 0,
+          "channel": "SMS",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 0: Initial abnormal screening dispatch"
+        },
+        {
+          "step": 2,
+          "delayWorkingDays": 7,
+          "channel": "CALL",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 7: Clinical navigator telephone engagement"
+        },
+        {
+          "step": 3,
+          "delayWorkingDays": 21,
+          "channel": "CLINICIAN",
+          "assignedRole": "CLINICIAN",
+          "description": "Day 21: Clinical specialist referral escalation"
+        }
+      ],
+      "codes": {
+        "screeningCode": "24604-5",
+        "screeningDisplay": "Mammography screening bilateral",
+        "confirmatoryCode": "70830007",
+        "confirmatoryDisplay": "Diagnostic core needle biopsy of breast"
+      }
+    },
+    {
+      "id": "colorectal-ontario",
+      "name": "Ontario FIT-Positive Follow-Up Pathway",
+      "jurisdiction": "Ontario, Canada",
+      "sourceRef": "Cancer Care Ontario ColonCancerCheck Standard: colonoscopy within 8 weeks (40 working days) of positive FIT",
+      "sourceUrl": "https://www.cancercareontario.ca/en/guidelines-advice/types-of-cancer/616",
+      "verified": true,
+      "referenceOnly": true,
+      "clinicalDeadlineWorkingDays": 40,
+      "referralTargetPercent": 85,
+      "urgencyClasses": [
+        { "id": "ROUTINE", "label": "Standard FIT Positive", "bypassRoutineSla": false },
+        { "id": "URGENT", "label": "FIT > 1000 ng/mL or Anaemia", "bypassRoutineSla": false },
+        { "id": "CRITICAL", "label": "Mass / Frank Lower GI Bleed", "bypassRoutineSla": true, "targetHours": 24 }
+      ],
+      "platformSlaHours": {
+        "ingestMaxHours": 48,
+        "acknowledgementMaxHours": 96,
+        "referralAcceptanceWorkingDays": 5,
+        "closureDocumentationWorkingDays": 2
+      },
+      "escalationLadder": [
+        {
+          "step": 1,
+          "delayWorkingDays": 0,
+          "channel": "SMS",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 0: Provincial recall letter / notification dispatch"
+        },
+        {
+          "step": 2,
+          "delayWorkingDays": 10,
+          "channel": "CALL",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 10: Primary care nurse navigation call"
+        },
+        {
+          "step": 3,
+          "delayWorkingDays": 25,
+          "channel": "CLINICIAN",
+          "assignedRole": "CLINICIAN",
+          "description": "Day 25: Regional endoscopy coordinator review"
+        }
+      ],
+      "codes": {
+        "screeningCode": "14563-1",
+        "screeningDisplay": "Fecal occult blood by immunoassay [FIT] in stool",
+        "confirmatoryCode": "73761001",
+        "confirmatoryDisplay": "Colonoscopy procedure"
+      }
+    }
+  ]
+}
+

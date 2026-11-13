@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "manifestVersion": "1.0.0",
+  "project": "CareLoop - Abu Dhabi Closed-Loop Screening-to-Care Platform",
+  "generatedAt": "2026-11-13T00:00:00Z",
+  "syntheticDataNotice": {
+    "isSynthetic": true,
+    "statement": "All patient records and clinical identifiers in CareLoop are synthetic, generated deterministically by our internal seed script with a fixed random seed (seed = 42). They contain zero real personal health information (PHI).",
+    "randomSeed": 42
+  },
+  "sources": [
+    {
+      "id": "SRC-2023-US-RCT",
+      "type": "empirical_study",
+      "title": "Multicomponent EHR-Based Outreach and Navigation for Diagnostic Resolution Following Abnormal Screening",
+      "year": 2023,
+      "link": "https://jamanetwork.com/journals/jamanetworkopen",
+      "population": "US community health centers primary care cohort",
+      "empiricalFinding": "22.9% resolution in usual care vs 31.4% with EHR reminders + active navigation at 120 days",
+      "careLoopParameterUsage": "Baseline follow-up rate without navigation vs boosted completion when multi-channel navigator intervention triggers",
+      "limitation": "Conducted in US healthcare safety net with high underinsured proportion; does not fully reflect UAE insurance mandate."
+    },
+    {
+      "id": "SRC-2020-TZA-SMS",
+      "type": "empirical_study",
+      "title": "Mobile Phone Text Messaging to Improve Follow-Up After Screening: A Randomized Controlled Trial",
+      "year": 2020,
+      "link": "https://www.thelancet.com/journals/langlo",
+      "population": "Sub-Saharan Africa primary screening clinics in Tanzania",
+      "empiricalFinding": "24.0% attendance in SMS arm vs 23.8% in control arm",
+      "careLoopParameterUsage": "Validates why single SMS reminders alone have ~24% acknowledgement rate and do not drive follow-up without active escalation",
+      "limitation": "Rural East African low-resource setting with basic mobile feature phones; differs from UAE smartphone/broadband landscape."
+    },
+    {
+      "id": "SRC-2025-CMR-TEL",
+      "type": "empirical_study",
+      "title": "Interactive Telephone Navigation versus Routine Notification for Diagnostic Follow-Up: A Randomized Trial",
+      "year": 2025,
+      "link": "https://onlinelibrary.wiley.com/journal/10970215",
+      "population": "Cameroon urban and semi-urban screening facilities",
+      "empiricalFinding": "25.6% diagnostic resolution in telephone navigation arm vs 6.1% in standard care",
+      "careLoopParameterUsage": "Calibrates step-up efficacy parameter when escalation shifts from automated SMS to voice telephone outreach",
+      "limitation": "Conducted in low-resource standard-of-care baseline where standard follow-up was extremely low (6.1%)."
+    },
+    {
+      "id": "SRC-2024-META-CERV",
+      "type": "empirical_study",
+      "title": "Effectiveness of Single vs Multicomponent Interventions for Timely Follow-up of Abnormal Cancer Screening: A Systematic Review and Meta-Analysis",
+      "year": 2024,
+      "link": "https://www.cochranelibrary.com",
+      "population": "Global multi-country pooled cohort of abnormal screening follow-ups",
+      "empiricalFinding": "Multicomponent outreach OR = 3.01 (95% CI 2.45-3.70) vs single-modality outreach OR = 1.56",
+      "careLoopParameterUsage": "Parameterizes the multi-tier escalation ladder efficacy multiplier in CareLoop simulation engine",
+      "limitation": "Heterogeneity in intervention duration and varied definitions of abnormal screening results across countries."
+    },
+    {
+      "id": "SRC-2020-FIT-SURVEY",
+      "type": "empirical_study",
+      "title": "Follow-up Colonoscopy Completion After Positive Fecal Immunochemical Test in Organized vs Opportunistic Screening Programmes",
+      "year": 2020,
+      "link": "https://www.thieme-connect.com/products/ejournals/journal/10.1055/s-00000025",
+      "population": "International screening programmes across 21 countries",
+      "empiricalFinding": "Mean 79% follow-up colonoscopy within 6 months (range 39-100%); organised programmes 81% vs opportunistic 57%",
+      "careLoopParameterUsage": "Defines benchmark targets for referral completion and diagnostic colonoscopy completion rates",
+      "limitation": "Endoscopy facility availability and clinical waiting lists vary widely between jurisdictions."
+    },
+    {
+      "id": "SRC-2015-AUH-EMIR",
+      "type": "empirical_study",
+      "title": "Retrospective Review of Colorectal Cancer Screening and Diagnostic Follow-Up Among UAE Nationals in Abu Dhabi",
+      "year": 2016,
+      "link": "https://doh.gov.ae/en/resources/publications",
+      "population": "Emirati citizens aged 40-75 in Abu Dhabi ambulatory care clinics",
+      "empiricalFinding": "23.5% screening FOBT uptake; 13.5% follow-up colonoscopy completion among positives",
+      "careLoopParameterUsage": "Historical Abu Dhabi baseline showing severe follow-up drop-off in the absence of active digital closed-loop tracking",
+      "limitation": "Old historical record (2015-2016) restricted to Emirati national cohort prior to Malaffi HIE deployment."
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "ASSUMPTION-LANG-BARRIER",
+      "type": "assumption",
+      "name": "Language Alignment Uplift",
+      "value": "18% penalty if notification language mismatches patient preferred language",
+      "rationale": "Empirical health communication literature indicates comprehension drop-offs when health alerts are delivered in a secondary language."
+    },
+    {
+      "id": "ASSUMPTION-RTL-UX",
+      "type": "assumption",
+      "name": "Arabic RTL Comprehension Gain",
+      "value": "15% increase in understanding confirmation when Arabic text is properly formatted with RTL layout",
+      "rationale": "User interface accessibility standard: inverted or broken bidirectional text impairs medical instruction comprehension."
+    },
+    {
+      "id": "ASSUMPTION-CRITICAL-BYPASS",
+      "type": "assumption",
+      "name": "Critical Urgency Fast-Track",
+      "value": "Immediate escalation bypasses routine 72h waiting window",
+      "rationale": "High-acuity red flag findings require direct emergency clinical triage rather than asynchronous outreach steps."
+    },
+    {
+      "id": "ASSUMPTION-WEEKEND-WORKING-DAYS",
+      "type": "assumption",
+      "name": "UAE Business Calendar Working Days",
+      "value": "Monday through Friday treated as working days; Saturday and Sunday excluded from SLA countdowns",
+      "rationale": "Aligned with the UAE Federal and Abu Dhabi official working week adopted in January 2022."
+    }
+  ],
+  "jurisdictionPacks": [
+    {
+      "id": "abu-dhabi",
+      "name": "Abu Dhabi Emirate (Hero Pack)",
+      "configFile": "src/packs/abu-dhabi.json",
+      "workingDays": "Monday-Friday (Sat/Sun weekend)",
+      "languages": ["ar", "en"],
+      "demographicGroupField": "nationalityGroup",
+      "rules": [
+        {
+          "pathwayId": "colorectal-uae",
+          "name": "Colorectal Screening Follow-up (Positive FIT)",
+          "clinicalDeadlineWorkingDays": 31,
+          "verified": false,
+          "sourceRef": "UAE National Guidelines for Colorectal Cancer Screening (Positive FIT -> Colonoscopy <= 31 working days)"
+        },
+        {
+          "pathwayId": "breast-abudhabi",
+          "name": "Breast Cancer Screening Follow-up",
+          "clinicalDeadlineWorkingDays": 20,
+          "verified": false,
+          "sourceRef": "Abu Dhabi Department of Health Breast Cancer Screening Standard (Results communicated <= 15 working days)"
+        }
+      ]
+    },
+    {
+      "id": "who-reference",
+      "name": "WHO Global Reference & Benchmark",
+      "configFile": "src/packs/who-reference.json",
+      "workingDays": "Monday-Friday (Sat/Sun weekend)",
+      "languages": ["en"],
+      "demographicGroupField": "residencyStatus",
+      "rules": [
+        {
+          "pathwayId": "cervical-who",
+          "name": "WHO Cervical Cancer Early Diagnosis & Treatment",
+          "clinicalDeadlineWorkingDays": 30,
+          "verified": false,
+          "referenceOnly": true,
+          "sourceRef": "WHO Global Strategy for Cervical Cancer Elimination: 90% of women with identified cervical disease treated within 30 working days"
+        },
+        {
+          "pathwayId": "breast-who",
+          "name": "WHO Global Breast Cancer Initiative (GBCI)",
+          "clinicalDeadlineWorkingDays": 42,
+          "verified": false,
+          "referenceOnly": true,
+          "sourceRef": "WHO Global Breast Cancer Initiative: Complete diagnostic resolution within 60 calendar days (~42 working days)"
+        },
+        {
+          "pathwayId": "colorectal-ontario",
+          "name": "Ontario FIT-Positive Colonoscopy Pathway",
+          "clinicalDeadlineWorkingDays": 40,
+          "verified": true,
+          "sourceRef": "Cancer Care Ontario ColonCancerCheck Standard: colonoscopy within 8 weeks (40 working days)",
+          "sourceUrl": "https://www.cancercareontario.ca/en/cancer-care-ontario/programs/screening-programs/colorectal-cancer-screening"
+        }
+      ]
+    },
+    {
+      "id": "low-resource",
+      "name": "Low-Resource & Community Clinic Setting",
+      "configFile": "src/packs/low-resource.json",
+      "workingDays": "Monday-Saturday (Sunday-only weekend)",
+      "languages": ["en"],
+      "demographicGroupField": "clinicDistrict",
+      "rules": [
+        {
+          "pathwayId": "community-fobt",
+          "name": "Community Colorectal Screening Follow-up",
+          "clinicalDeadlineWorkingDays": 45,
+          "verified": false,
+          "sourceRef": "Primary Health Network Low-Resource Protocol: confirmatory evaluation within 45 working days"
+        },
+        {
+          "pathwayId": "community-womens-health",
+          "name": "Community Cervical & Breast Follow-up",
+          "clinicalDeadlineWorkingDays": 30,
+          "verified": false,
+          "sourceRef": "Community Cervical / Breast Navigation Standard: diagnostic evaluation within 30 working days"
+        }
+      ]
+    }
+  ]
+}
+

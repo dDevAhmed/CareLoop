@@ -1,0 +1,203 @@
+{
+  "pathways": [
+    {
+      "id": "colorectal-uae",
+      "name": "UAE Colorectal Cancer Screening Pathway",
+      "nameArabic": "مسار فحص سرطان القولون والمستقيم لدولة الإمارات",
+      "jurisdiction": "UAE",
+      "sourceRef": "UAE National Guidelines for Colorectal Cancer Screening & DoH Abu Dhabi Standard for Cancer Screening",
+      "verified": false,
+      "referenceOnly": false,
+      "clinicalDeadlineWorkingDays": 31,
+      "referralTargetPercent": 90,
+      "platformSlaHours": {
+        "ingestMaxHours": 24,
+        "acknowledgementMaxHours": 72,
+        "referralAcceptanceWorkingDays": 2,
+        "closureDocumentationWorkingDays": 1
+      },
+      "escalationLadder": [
+        {
+          "step": 1,
+          "delayWorkingDays": 0,
+          "channel": "SMS",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 0: Automated bilingual SMS result notification with acknowledgement link"
+        },
+        {
+          "step": 2,
+          "delayWorkingDays": 3,
+          "channel": "CALL",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 3: Interactive phone call by Care Navigator to address barriers & confirm understanding"
+        },
+        {
+          "step": 3,
+          "delayWorkingDays": 7,
+          "channel": "NAVIGATOR_VISIT",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 7: Outreach / Clinic Navigation intervention for unresolved barriers"
+        },
+        {
+          "step": 4,
+          "delayWorkingDays": 10,
+          "channel": "CLINICIAN",
+          "assignedRole": "CLINICIAN",
+          "description": "Overdue / Escalation: Direct attending clinician peer-to-peer case review and outreach"
+        }
+      ],
+      "codes": {
+        "screeningLoinc": "14563-1",
+        "screeningLoincDisplay": "Fecal occult blood by immunoassay [FIT] in stool",
+        "confirmatorySnomed": "73761001",
+        "confirmatorySnomedDisplay": "Colonoscopy procedure"
+      }
+    },
+    {
+      "id": "breast-abudhabi",
+      "name": "Abu Dhabi Breast Cancer Screening Pathway",
+      "nameArabic": "مسار فحص سرطان الثدي لإمارة أبوظبي",
+      "jurisdiction": "Abu Dhabi",
+      "sourceRef": "Department of Health Abu Dhabi Cancer Prevention and Screening Standard (15-day communication standard)",
+      "verified": false,
+      "referenceOnly": false,
+      "clinicalDeadlineWorkingDays": 15,
+      "referralTargetPercent": 95,
+      "platformSlaHours": {
+        "ingestMaxHours": 24,
+        "acknowledgementMaxHours": 48,
+        "referralAcceptanceWorkingDays": 2,
+        "closureDocumentationWorkingDays": 1
+      },
+      "escalationLadder": [
+        {
+          "step": 1,
+          "delayWorkingDays": 0,
+          "channel": "WHATSAPP",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 0: Secure bilingual WhatsApp / SMS notification of abnormal mammography finding"
+        },
+        {
+          "step": 2,
+          "delayWorkingDays": 2,
+          "channel": "CALL",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 2: Clinical Navigator telephone contact to facilitate breast diagnostic clinic referral"
+        },
+        {
+          "step": 3,
+          "delayWorkingDays": 5,
+          "channel": "NAVIGATOR_VISIT",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 5: Urgent navigation coordinator case review"
+        },
+        {
+          "step": 4,
+          "delayWorkingDays": 8,
+          "channel": "CLINICIAN",
+          "assignedRole": "CLINICIAN",
+          "description": "Overdue Clinician Escalation: Lead breast care specialist review"
+        }
+      ],
+      "codes": {
+        "screeningLoinc": "24604-5",
+        "screeningLoincDisplay": "Mammography screening bilateral",
+        "confirmatorySnomed": "392011003",
+        "confirmatorySnomedDisplay": "Diagnostic breast ultrasound and core biopsy"
+      }
+    },
+    {
+      "id": "cervical-who",
+      "name": "WHO Global Cervical Cancer Elimination Initiative (Reference Only)",
+      "nameArabic": "مبادرة منظمة الصحة العالمية للقضاء على سرطان عنق الرحم (مرجعي)",
+      "jurisdiction": "WHO",
+      "sourceRef": "WHO Global Strategy for Cervical Cancer Elimination (90-70-90 targets: 90% of women with identified cervical disease receive treatment)",
+      "verified": false,
+      "referenceOnly": true,
+      "clinicalDeadlineWorkingDays": 30,
+      "referralTargetPercent": 90,
+      "platformSlaHours": {
+        "ingestMaxHours": 24,
+        "acknowledgementMaxHours": 72,
+        "referralAcceptanceWorkingDays": 3,
+        "closureDocumentationWorkingDays": 2
+      },
+      "escalationLadder": [
+        {
+          "step": 1,
+          "delayWorkingDays": 0,
+          "channel": "SMS",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 0: Standard screening result message"
+        },
+        {
+          "step": 2,
+          "delayWorkingDays": 5,
+          "channel": "CALL",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 5: Community health worker follow-up call"
+        },
+        {
+          "step": 3,
+          "delayWorkingDays": 12,
+          "channel": "CLINICIAN",
+          "assignedRole": "CLINICIAN",
+          "description": "Day 12: Clinician escalation for colposcopy triage"
+        }
+      ],
+      "codes": {
+        "screeningLoinc": "21440-3",
+        "screeningLoincDisplay": "Human papilloma virus 16+18+45 DNA [Presence] in Cervix",
+        "confirmatorySnomed": "285854004",
+        "confirmatorySnomedDisplay": "Colposcopy of cervix with biopsy"
+      }
+    },
+    {
+      "id": "breast-who-60day",
+      "name": "WHO Global Breast Cancer Initiative 60-Day Diagnostic Resolution (Reference Only)",
+      "nameArabic": "المبادرة العالمية لمنظمة الصحة العالمية لسرطان الثدي - 60 يوماً (مرجعي)",
+      "jurisdiction": "WHO",
+      "sourceRef": "WHO Global Breast Cancer Initiative Implementation Framework (Diagnostic resolution completed within 60 days of first presentation)",
+      "verified": false,
+      "referenceOnly": true,
+      "clinicalDeadlineWorkingDays": 42,
+      "referralTargetPercent": 85,
+      "platformSlaHours": {
+        "ingestMaxHours": 24,
+        "acknowledgementMaxHours": 72,
+        "referralAcceptanceWorkingDays": 5,
+        "closureDocumentationWorkingDays": 2
+      },
+      "escalationLadder": [
+        {
+          "step": 1,
+          "delayWorkingDays": 0,
+          "channel": "SMS",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 0: Initial abnormal screening dispatch"
+        },
+        {
+          "step": 2,
+          "delayWorkingDays": 7,
+          "channel": "CALL",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 7: Navigator engagement"
+        },
+        {
+          "step": 3,
+          "delayWorkingDays": 21,
+          "channel": "CLINICIAN",
+          "assignedRole": "CLINICIAN",
+          "description": "Day 21: Clinical specialist referral escalation"
+        }
+      ],
+      "codes": {
+        "screeningLoinc": "24604-5",
+        "screeningLoincDisplay": "Mammography screening bilateral",
+        "confirmatorySnomed": "70830007",
+        "confirmatorySnomedDisplay": "Diagnostic core needle biopsy of breast"
+      }
+    }
+  ]
+}
+

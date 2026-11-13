@@ -1,0 +1,148 @@
+{
+  "id": "low-resource",
+  "name": "Low-Resource & Community Clinic Setting",
+  "description": "Simplified operational profile for primary clinics and mobile screening vans without EHR infrastructure. Uses CSV batch ingestion and SMS/phone call navigation.",
+  "version": "1.0.0",
+  "workingDayCalendar": {
+    "weekendDays": [0],
+    "holidays": ["2026-01-01", "2026-05-01"]
+  },
+  "languages": [
+    {
+      "code": "en",
+      "name": "English",
+      "isRtl": false
+    }
+  ],
+  "defaultLanguage": "en",
+  "patientGroupFields": [
+    {
+      "id": "clinicDistrict",
+      "label": "Clinic District / Outpost",
+      "options": [
+        { "id": "DISTRICT_NORTH", "label": "Northern Primary Health Center" },
+        { "id": "DISTRICT_SOUTH", "label": "Southern Community Outpost" },
+        { "id": "RURAL_MOBILE", "label": "Rural Mobile Screening Unit" }
+      ]
+    },
+    {
+      "id": "contactAccessibility",
+      "label": "Phone Accessibility",
+      "options": [
+        { "id": "PERSONAL_PHONE", "label": "Personal Mobile Phone" },
+        { "id": "SHARED_HOUSEHOLD", "label": "Shared Household Phone" },
+        { "id": "CHW_LIAISON", "label": "Community Health Worker Liaison" }
+      ]
+    }
+  ],
+  "enabledChannels": ["SMS", "CALL"],
+  "terminologyPlaceholders": {
+    "screeningCodeSystemName": "Primary Clinic Test Roster",
+    "confirmatoryCodeSystemName": "National Essential Diagnostics List",
+    "licenseNotice": "Self-contained coding for community settings without proprietary terminology subscriptions."
+  },
+  "dataGovernanceNotes": "Zero dependency on external health information exchanges. Cases are ingested via CSV batch import and tracked through local nurse navigation tasks.",
+  "pathways": [
+    {
+      "id": "community-fobt",
+      "name": "Community Colorectal Screening Follow-up",
+      "jurisdiction": "Primary Health Network",
+      "sourceRef": "Primary Health Network Low-Resource Protocol: confirmatory evaluation within 45 working days",
+      "verified": false,
+      "referenceOnly": false,
+      "clinicalDeadlineWorkingDays": 45,
+      "referralTargetPercent": 80,
+      "urgencyClasses": [
+        { "id": "ROUTINE", "label": "Positive Guaiac/FIT", "bypassRoutineSla": false },
+        { "id": "URGENT", "label": "Marked Blood in Stool", "bypassRoutineSla": false },
+        { "id": "CRITICAL", "label": "Acute Obstruction / Severe Anaemia", "bypassRoutineSla": true, "targetHours": 24 }
+      ],
+      "platformSlaHours": {
+        "ingestMaxHours": 48,
+        "acknowledgementMaxHours": 120,
+        "referralAcceptanceWorkingDays": 5,
+        "closureDocumentationWorkingDays": 3
+      },
+      "escalationLadder": [
+        {
+          "step": 1,
+          "delayWorkingDays": 0,
+          "channel": "SMS",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 0: Automated SMS notification of test result"
+        },
+        {
+          "step": 2,
+          "delayWorkingDays": 7,
+          "channel": "CALL",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 7: Community health nurse phone call to explain findings"
+        },
+        {
+          "step": 3,
+          "delayWorkingDays": 20,
+          "channel": "CALL",
+          "assignedRole": "CLINICIAN",
+          "description": "Day 20: Visiting medical officer telephone triage"
+        }
+      ],
+      "codes": {
+        "screeningCode": "COMM-FOBT-01",
+        "screeningDisplay": "Community Fecal Occult Blood Test",
+        "confirmatoryCode": "COMM-ENDO-01",
+        "confirmatoryDisplay": "Referral to District Endoscopy Centre"
+      }
+    },
+    {
+      "id": "community-womens-health",
+      "name": "Community Cervical & Breast Follow-up",
+      "jurisdiction": "Primary Health Network",
+      "sourceRef": "Community Cervical / Breast Navigation Standard: diagnostic evaluation within 30 working days",
+      "verified": false,
+      "referenceOnly": false,
+      "clinicalDeadlineWorkingDays": 30,
+      "referralTargetPercent": 85,
+      "urgencyClasses": [
+        { "id": "ROUTINE", "label": "Abnormal Visual Inspection / Smear", "bypassRoutineSla": false },
+        { "id": "URGENT", "label": "Gross Lesion / Clinically Palpable", "bypassRoutineSla": false },
+        { "id": "CRITICAL", "label": "Suspected Advanced Carcinoma", "bypassRoutineSla": true, "targetHours": 24 }
+      ],
+      "platformSlaHours": {
+        "ingestMaxHours": 48,
+        "acknowledgementMaxHours": 96,
+        "referralAcceptanceWorkingDays": 4,
+        "closureDocumentationWorkingDays": 2
+      },
+      "escalationLadder": [
+        {
+          "step": 1,
+          "delayWorkingDays": 0,
+          "channel": "SMS",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 0: Local health clinic notification dispatch"
+        },
+        {
+          "step": 2,
+          "delayWorkingDays": 5,
+          "channel": "CALL",
+          "assignedRole": "NAVIGATOR",
+          "description": "Day 5: Health worker telephone contact or household follow-up"
+        },
+        {
+          "step": 3,
+          "delayWorkingDays": 15,
+          "channel": "CALL",
+          "assignedRole": "CLINICIAN",
+          "description": "Day 15: Regional referral hospital appointment coordination"
+        }
+      ],
+      "codes": {
+        "screeningCode": "COMM-VIA-01",
+        "screeningDisplay": "Visual Inspection with Acetic Acid (VIA)",
+        "confirmatoryCode": "COMM-COLPO-01",
+        "confirmatoryDisplay": "District Hospital Diagnostic Colposcopy"
+      }
+    }
+  ]
+}
+
