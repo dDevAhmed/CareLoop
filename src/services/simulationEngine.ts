@@ -187,3 +187,4 @@ export function runSimulationScenario(
       'SIMULATION NOTICE: Model outputs are statistical estimations synthesized from published cluster-randomized trials (SRC-2023-US-RCT, SRC-2025-CMR-TEL) and international registries. This simulation does not represent individual patient prognosis or certified clinical outcomes.',
   };
 }
+

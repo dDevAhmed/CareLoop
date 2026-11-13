@@ -16,3 +16,4 @@ CareLoop was engineered specifically as an innovation submission for the **Futur
    - The multi-channel outreach engine models SMS, WhatsApp Business API, and telephony voice routing via mock local queues and simulated delivery events. Production deployment requires credentialing with accredited telecom aggregators (e.g., Twilio, Infobip, or UAE-licensed telecom providers).
 5. **AI Inference Implementation**:
    - In accordance with Challenge security and offline reproducibility guidelines, generative AI capabilities utilize the local deterministic `MockAiProvider`. Production enablement of fine-tuned clinical LLMs (e.g. Med-PaLM 2 / Gemini Health) requires enterprise Vertex AI private VPC peering and data sovereignty compliance with UAE Federal Decree-Law No. 45/2021 on Personal Data Protection.
+

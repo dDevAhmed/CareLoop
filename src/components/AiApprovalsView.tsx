@@ -294,3 +294,4 @@ export function AiApprovalsView({ activeRole, onRefreshCounts }: AiApprovalsView
     </div>
   );
 }
+

@@ -11,6 +11,7 @@ import {
   JurisdictionPack,
 } from '../types';
 import { formatHumanLabel } from '../utils/formatters';
+import { CustomDropdown } from './CustomDropdown';
 
 interface CaseDetailModalProps {
   caseDetail: any;
@@ -449,43 +450,52 @@ export function CaseDetailModal({
                 <h4 className="font-bold text-cl-muted uppercase text-[11px] tracking-wide">
                   Log New Navigator Outreach Attempt
                 </h4>
-                <div className="grid grid-cols-3 gap-2">
-                  <select
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <CustomDropdown
                     value={outreachChannel}
-                    onChange={(e) => setOutreachChannel(e.target.value as OutreachChannel)}
-                    className="p-1.5 border border-cl-border rounded text-xs bg-white text-cl-ink"
-                  >
-                    <option value="CALL">Telephone Call</option>
-                    <option value="SMS">SMS Text</option>
-                    <option value="WHATSAPP">WhatsApp</option>
-                    <option value="CLINICIAN">Clinician Direct</option>
-                  </select>
+                    onChange={(val) => setOutreachChannel(val as OutreachChannel)}
+                    options={[
+                      { value: 'CALL', label: 'Telephone Call' },
+                      { value: 'SMS', label: 'SMS Text' },
+                      { value: 'WHATSAPP', label: 'WhatsApp' },
+                      { value: 'CLINICIAN', label: 'Clinician Direct' },
+                    ]}
+                    variant="light"
+                    size="sm"
+                    width="w-full"
+                  />
 
-                  <select
+                  <CustomDropdown
                     value={outreachOutcome}
-                    onChange={(e) => setOutreachOutcome(e.target.value as OutreachOutcome)}
-                    className="p-1.5 border border-cl-border rounded text-xs bg-white text-cl-ink"
-                  >
-                    <option value="ACKNOWLEDGED">Acknowledged</option>
-                    <option value="DELIVERED">Delivered (No Answer)</option>
-                    <option value="NO_ANSWER">No Answer</option>
-                    <option value="FAILED">Failed / Wrong Number</option>
-                  </select>
+                    onChange={(val) => setOutreachOutcome(val as OutreachOutcome)}
+                    options={[
+                      { value: 'ACKNOWLEDGED', label: 'Acknowledged' },
+                      { value: 'DELIVERED', label: 'Delivered (No Answer)' },
+                      { value: 'NO_ANSWER', label: 'No Answer' },
+                      { value: 'FAILED', label: 'Failed / Wrong Number' },
+                    ]}
+                    variant="light"
+                    size="sm"
+                    width="w-full"
+                  />
 
-                  <select
+                  <CustomDropdown
                     value={barrierReason}
-                    onChange={(e) => setBarrierReason(e.target.value as BarrierReason)}
-                    className="p-1.5 border border-cl-border rounded text-xs bg-white text-cl-ink"
-                  >
-                    <option value="">No Barrier Encountered</option>
-                    <option value="FEAR_ANXIETY">Fear / Anxiety</option>
-                    <option value="APPOINTMENT_UNAVAILABLE">Appointment Unavailable</option>
-                    <option value="TRANSPORT">Transport Difficulties</option>
-                    <option value="LOW_HEALTH_LITERACY">Low Health Literacy</option>
-                    <option value="COMMUNICATION_FAILURE">Communication / Language</option>
-                    <option value="COST_INSURANCE">Insurance / Cost</option>
-                    <option value="COMPETING_PRIORITIES">Work / Priorities</option>
-                  </select>
+                    onChange={(val) => setBarrierReason(val as BarrierReason)}
+                    options={[
+                      { value: '', label: 'No Barrier Encountered' },
+                      { value: 'FEAR_ANXIETY', label: 'Fear / Anxiety' },
+                      { value: 'APPOINTMENT_UNAVAILABLE', label: 'Appointment Unavailable' },
+                      { value: 'TRANSPORT', label: 'Transport Difficulties' },
+                      { value: 'LOW_HEALTH_LITERACY', label: 'Low Health Literacy' },
+                      { value: 'COMMUNICATION_FAILURE', label: 'Communication / Language' },
+                      { value: 'COST_INSURANCE', label: 'Insurance / Cost' },
+                      { value: 'COMPETING_PRIORITIES', label: 'Work / Priorities' },
+                    ]}
+                    variant="light"
+                    size="sm"
+                    width="w-full"
+                  />
                 </div>
 
                 <input
@@ -666,16 +676,19 @@ export function CaseDetailModal({
                       className="w-full p-2 border border-cl-border rounded text-xs bg-white text-cl-ink"
                     />
                   ) : (
-                    <select
+                    <CustomDropdown
                       value={authorisedReason}
-                      onChange={(e) => setAuthorisedReason(e.target.value as any)}
-                      className="w-full p-2 border border-cl-border rounded text-xs bg-white text-cl-ink"
-                    >
-                      <option value="INFORMED_REFUSAL">Informed Refusal</option>
-                      <option value="TRANSFERRED_CARE">Transferred Care</option>
-                      <option value="DECEASED">Deceased</option>
-                      <option value="OTHER">Other Authorised Cause</option>
-                    </select>
+                      onChange={(val) => setAuthorisedReason(val as any)}
+                      options={[
+                        { value: 'INFORMED_REFUSAL', label: 'Informed Refusal' },
+                        { value: 'TRANSFERRED_CARE', label: 'Transferred Care' },
+                        { value: 'DECEASED', label: 'Deceased' },
+                        { value: 'OTHER', label: 'Other Authorised Cause' },
+                      ]}
+                      variant="light"
+                      size="sm"
+                      width="w-full"
+                    />
                   )}
 
                   <input
@@ -778,3 +791,4 @@ export function CaseDetailModal({
     </div>
   );
 }
+

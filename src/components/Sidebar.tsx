@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { UserRole, JurisdictionPack } from '../types';
+import { CustomDropdown } from './CustomDropdown';
 
 export type MainTab =
   | 'today'
@@ -159,9 +160,9 @@ export function Sidebar({
   ];
 
   return (
-    <aside className="w-[232px] min-w-[232px] max-w-[232px] bg-cl-navy text-white flex flex-col min-h-screen border-r border-white/10 select-none">
+    <aside className="w-[232px] min-w-[232px] max-w-[232px] h-screen bg-cl-navy text-white flex flex-col border-r border-white/10 select-none flex-shrink-0 sticky top-0 z-30 overflow-hidden">
       {/* Brand Header */}
-      <div className="p-4 border-b border-white/10 flex items-center">
+      <div className="p-4 border-b border-white/10 flex items-center flex-shrink-0">
         <img
           src="/brand/careloop-mark.svg"
           alt="CareLoop Mark"
@@ -177,8 +178,8 @@ export function Sidebar({
         </div>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto">
+      {/* Navigation Links with independent scroll */}
+      <nav className="flex-1 px-2 py-3 space-y-1 overflow-y-auto min-h-0">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           return (
@@ -284,20 +285,17 @@ export function Sidebar({
 
               {/* Active Pack */}
               <div className="pt-1.5 border-t border-white/10">
-                <div className="text-[10px] text-white/60 uppercase tracking-wider font-semibold">
+                <div className="text-[10px] text-white/60 uppercase tracking-wider font-semibold mb-1">
                   Jurisdiction Pack
                 </div>
-                <select
+                <CustomDropdown
                   value={activePack?.id || 'abu-dhabi'}
-                  onChange={(e) => onSelectPack(e.target.value)}
-                  className="mt-1 w-full text-xs bg-cl-navy border border-white/20 rounded p-1 text-white focus:outline-none focus:ring-1 focus:ring-cl-teal"
-                >
-                  {packs.map((p) => (
-                    <option key={p.id} value={p.id} className="bg-cl-navy text-white">
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={onSelectPack}
+                  options={packs.map((p) => ({ value: p.id, label: p.name }))}
+                  variant="dark"
+                  size="sm"
+                  width="w-full"
+                />
 
                 {/* Unverified Rules Badge */}
                 <div className="mt-1.5 flex items-center justify-between text-[11px] text-amber-200 bg-amber-900/30 px-1.5 py-0.5 rounded">
@@ -315,7 +313,7 @@ export function Sidebar({
       </div>
 
       {/* User Chip & Patient PWA Link */}
-      <div className="p-3 border-t border-white/10 space-y-2">
+      <div className="p-3 border-t border-white/10 space-y-2 flex-shrink-0">
         <Link
           href="/patient"
           target="_blank"
@@ -344,18 +342,21 @@ export function Sidebar({
             </div>
           </div>
 
-          <select
+          <CustomDropdown
             value={activeRole}
-            onChange={(e) => setActiveRole(e.target.value as UserRole)}
-            className="text-[10px] bg-white/10 text-white rounded p-1 border-0 focus:outline-none cursor-pointer"
-            title="Switch Simulated Role"
-          >
-            <option value="NAVIGATOR" className="bg-cl-navy text-white">Nav</option>
-            <option value="CLINICIAN" className="bg-cl-navy text-white">Doc</option>
-            <option value="PROGRAMME_ANALYST" className="bg-cl-navy text-white">Analyst</option>
-          </select>
+            onChange={(val) => setActiveRole(val as UserRole)}
+            options={[
+              { value: 'NAVIGATOR', label: 'Navigator' },
+              { value: 'CLINICIAN', label: 'Clinician' },
+              { value: 'PROGRAMME_ANALYST', label: 'Analyst' },
+            ]}
+            variant="dark"
+            size="sm"
+            align="right"
+          />
         </div>
       </div>
     </aside>
   );
 }
+

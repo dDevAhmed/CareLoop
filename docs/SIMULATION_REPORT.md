@@ -118,3 +118,4 @@ Scenario High (Organized 79.0%):
 ## 6. Conclusion
 
 The simulation results substantiate CareLoop's core thesis: **standalone digital reminders fail to achieve screening resolution without structured human escalation**. By pairing automated multi-channel nudges with prioritized health navigation, facility rejection interception, and transparent drop-off risk triage, CareLoop delivers a statistically validated **$+15.2\%$ to $+66.0\%$ lift** in completed diagnostic resolutions across diverse healthcare delivery environments.
+

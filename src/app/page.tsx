@@ -202,9 +202,9 @@ export default function CareLoopDashboard() {
   return (
     <div
       dir={isRtl ? 'rtl' : 'ltr'}
-      className="flex min-h-screen bg-cl-page-bg text-cl-ink font-sans selection:bg-cl-mist selection:text-cl-deep-teal"
+      className="flex h-screen overflow-hidden bg-cl-page-bg text-cl-ink font-sans selection:bg-cl-mist selection:text-cl-deep-teal"
     >
-      {/* 232px Navy Sidebar */}
+      {/* 232px Navy Sidebar (fixed, independent scroll) */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -219,8 +219,8 @@ export default function CareLoopDashboard() {
         counts={counts}
       />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      {/* Main Content Area (separate scrolling) */}
+      <div className="flex-1 h-screen flex flex-col min-w-0 overflow-y-auto">
         {/* Top Bar with Cmd/Ctrl-K Search, Demo Pill & Language Toggle */}
         <TopBar
           searchQuery={searchQuery}

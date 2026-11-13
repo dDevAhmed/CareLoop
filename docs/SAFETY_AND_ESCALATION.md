@@ -44,3 +44,4 @@ In standard electronic health exchanges, a specialist diagnostic facility may de
 | **CRITICAL** | Massive occult bleeding, BI-RADS 5 suspicious lesion, high-grade cervical lesion | Bypasses routine waiting windows; immediate same-day direct Clinician/Navigator telephone contact within 4 business hours | Accelerated clinical deadline | Highlighted with coral priority shield icon across all worklists |
 | **URGENT** | BI-RADS 4 suspicious lesion, high-titer positive FIT, borderline clinical history | Prioritized outreach within 24 business hours via WhatsApp & Telephone | Standard pathway deadline | Pinned to top of navigator shift queue |
 | **ROUTINE** | Standard positive screening result meeting guideline threshold | Automated bilingual SMS notification with 72h acknowledgment tracker | Standard pathway deadline (e.g. 31 working days) | Escalates through ladder steps if unacknowledged |
+

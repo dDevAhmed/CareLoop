@@ -90,3 +90,4 @@ export function getSlaProgressPercent(workingDaysRemaining: number, targetDays: 
   const elapsed = Math.max(0, targetDays - workingDaysRemaining);
   return Math.min(100, Math.round((elapsed / targetDays) * 100));
 }
+

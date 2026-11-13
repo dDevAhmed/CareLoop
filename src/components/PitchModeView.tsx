@@ -212,3 +212,4 @@ export function PitchModeView({ onAdvanceClock, onResetClock }: PitchModeViewPro
     </div>
   );
 }
+

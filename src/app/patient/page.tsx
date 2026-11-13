@@ -8,6 +8,7 @@ import {
   Language,
 } from '@/types';
 import { PatientResultTemplate, SYNTHETIC_DEMO_FOOTER } from '@/config/patientTemplates';
+import { CustomDropdown } from '@/components/CustomDropdown';
 
 export default function PatientPwaPage() {
   const [token, setToken] = useState<string>('');
@@ -329,21 +330,20 @@ export default function PatientPwaPage() {
                 {isRtl && patient?.fullNameArabic ? patient.fullNameArabic : patient?.fullName || 'Selecting...'}
               </strong>
             </div>
-            <select
-              aria-label="Switch Patient Session"
+            <CustomDropdown
               value={patient?.id || ''}
-              onChange={(e) => {
-                const selected = samplePatients.find((p) => p.id === e.target.value);
+              onChange={(val) => {
+                const selected = samplePatients.find((p) => p.id === val);
                 if (selected) loginWithPatient(selected.token, selected.id);
               }}
-              className="bg-slate-900 text-teal-300 border border-slate-700 rounded text-xs px-2 py-1 max-w-[120px]"
-            >
-              {samplePatients.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.fullName} ({p.language.toUpperCase()})
-                </option>
-              ))}
-            </select>
+              options={samplePatients.map((p) => ({
+                value: p.id,
+                label: `${p.fullName} (${p.language.toUpperCase()})`,
+              }))}
+              variant="dark"
+              size="sm"
+              align="right"
+            />
           </div>
         </header>
 

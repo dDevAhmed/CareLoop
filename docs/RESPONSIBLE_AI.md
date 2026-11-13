@@ -64,3 +64,4 @@ CareLoop incorporates Artificial Intelligence (AI) and automated assistive techn
 ### Invariant 5: Local, Deterministic AI Execution
 - Phase 1, Phase 2, and Phase 3 CareLoop prototypes execute all mock AI inference locally and deterministically.
 - **Zero outbound calls** are made to third-party public LLM APIs (e.g. OpenAI, Anthropic, or external cloud endpoints), guaranteeing that patient data remains completely self-contained within the platform boundary.
+

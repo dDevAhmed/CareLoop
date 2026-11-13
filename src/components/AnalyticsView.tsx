@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { JurisdictionPack } from '../types';
 import { formatHumanLabel } from '../utils/formatters';
+import { CustomDropdown } from './CustomDropdown';
 
 interface AnalyticsViewProps {
   activePack: JurisdictionPack | null;
@@ -48,18 +49,16 @@ export function AnalyticsView({ activePack }: AnalyticsViewProps) {
 
         <div className="flex items-center space-x-2">
           {/* Pathway Selector */}
-          <select
+          <CustomDropdown
             value={selectedPathway}
-            onChange={(e) => setSelectedPathway(e.target.value)}
-            className="px-3 py-1.5 bg-white border border-cl-border rounded-cl-sm text-xs font-semibold text-cl-ink focus:outline-none focus:ring-1 focus:ring-cl-teal"
-          >
-            <option value="all">All Screening Pathways</option>
-            {activePack?.pathways.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+            onChange={setSelectedPathway}
+            options={[
+              { value: 'all', label: 'All Screening Pathways' },
+              ...(activePack?.pathways.map((p) => ({ value: p.id, label: p.name })) || []),
+            ]}
+            variant="light"
+            size="md"
+          />
 
           {/* Export to CSV Button */}
           <a
@@ -376,3 +375,4 @@ export function AnalyticsView({ activePack }: AnalyticsViewProps) {
     </div>
   );
 }
+

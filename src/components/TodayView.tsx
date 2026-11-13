@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Case, JurisdictionPack, UserRole } from '../types';
 import { formatHumanLabel, formatSlaText, getSlaProgressPercent } from '../utils/formatters';
 import { calculateDropOffRisk } from '../engine/aiProvider';
+import { CustomDropdown } from './CustomDropdown';
 
 interface TodayViewProps {
   cases: Case[];
@@ -277,39 +278,41 @@ export function TodayView({
         {/* Filter Chips: Pathway, Owner, Language */}
         <div className="flex items-center space-x-2 text-xs">
           {/* Pathway Filter */}
-          <select
+          <CustomDropdown
             value={selectedPathway}
-            onChange={(e) => setSelectedPathway(e.target.value)}
-            className="px-2.5 py-1.5 bg-white border border-cl-border rounded-cl-sm text-cl-ink focus:outline-none focus:ring-1 focus:ring-cl-teal font-medium"
-          >
-            <option value="all">All Pathways</option>
-            {activePack?.pathways.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+            onChange={setSelectedPathway}
+            options={[
+              { value: 'all', label: 'All Pathways' },
+              ...(activePack?.pathways.map((p) => ({ value: p.id, label: p.name })) || []),
+            ]}
+            variant="light"
+            size="sm"
+          />
 
           {/* Owner Filter */}
-          <select
+          <CustomDropdown
             value={selectedOwner}
-            onChange={(e) => setSelectedOwner(e.target.value)}
-            className="px-2.5 py-1.5 bg-white border border-cl-border rounded-cl-sm text-cl-ink focus:outline-none focus:ring-1 focus:ring-cl-teal font-medium"
-          >
-            <option value="all">All Owners</option>
-            <option value="unassigned">Unassigned Only</option>
-          </select>
+            onChange={setSelectedOwner}
+            options={[
+              { value: 'all', label: 'All Owners' },
+              { value: 'unassigned', label: 'Unassigned Only' },
+            ]}
+            variant="light"
+            size="sm"
+          />
 
           {/* Language Filter */}
-          <select
+          <CustomDropdown
             value={selectedLang}
-            onChange={(e) => setSelectedLang(e.target.value)}
-            className="px-2.5 py-1.5 bg-white border border-cl-border rounded-cl-sm text-cl-ink focus:outline-none focus:ring-1 focus:ring-cl-teal font-medium"
-          >
-            <option value="all">All Languages</option>
-            <option value="ar">Arabic (عربي)</option>
-            <option value="en">English</option>
-          </select>
+            onChange={setSelectedLang}
+            options={[
+              { value: 'all', label: 'All Languages' },
+              { value: 'ar', label: 'Arabic (عربي)' },
+              { value: 'en', label: 'English' },
+            ]}
+            variant="light"
+            size="sm"
+          />
         </div>
       </div>
 
@@ -630,3 +633,4 @@ export function TodayView({
     </div>
   );
 }
+
