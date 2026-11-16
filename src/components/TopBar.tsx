@@ -29,7 +29,7 @@ export function TopBar({
   }, []);
 
   return (
-    <header className="h-14 bg-white border-b border-cl-border px-6 flex items-center justify-between select-none sticky top-0 z-20">
+    <header className="h-16 bg-white border-b border-cl-border px-6 flex items-center justify-between select-none sticky top-0 z-20">
       {/* Global Search with Cmd/Ctrl-K */}
       <div className="flex-1 max-w-md relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-cl-muted">
@@ -43,7 +43,7 @@ export function TopBar({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search by case #, patient name, or result ID..."
-          className="w-full pl-9 pr-16 py-1.5 text-sm bg-cl-page-bg border border-cl-border rounded-cl-sm text-cl-ink placeholder-cl-muted focus:outline-none focus:border-cl-teal focus:ring-1 focus:ring-cl-teal transition-all"
+          className="w-full pl-9 pr-16 py-2 text-sm bg-cl-page-bg border border-cl-border rounded-cl-sm text-cl-ink placeholder-cl-muted focus:outline-none focus:border-cl-teal focus:ring-1 focus:ring-cl-teal transition-all"
         />
         <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
           <kbd className="px-1.5 py-0.5 text-[10px] font-semibold text-cl-muted bg-white border border-cl-border rounded shadow-sm">

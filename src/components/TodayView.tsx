@@ -318,6 +318,7 @@ export function TodayView({
             ]}
             variant="light"
             size="sm"
+            align="right"
           />
 
           {/* Language Filter */}
@@ -334,6 +335,7 @@ export function TodayView({
             ]}
             variant="light"
             size="sm"
+            align="right"
           />
         </div>
       </div>
@@ -481,11 +483,10 @@ export function TodayView({
           </div>
 
           {/* Table Footer with Pagination */}
-          <div className="p-3.5 border-t border-cl-border bg-cl-page-bg flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-cl-muted">
-            <div className="flex items-center space-x-2">
+          <div className="p-3 border-t border-cl-border bg-cl-page-bg flex flex-col xl:flex-row items-center justify-between gap-3 text-xs text-cl-muted">
+            <div className="flex items-center space-x-2 whitespace-nowrap flex-shrink-0">
               <span>
-                Showing <strong className="text-cl-ink font-semibold">{filteredCases.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}</strong>–
-                <strong className="text-cl-ink font-semibold">{Math.min(currentPage * PAGE_SIZE, filteredCases.length)}</strong> of{' '}
+                Showing <strong className="text-cl-ink font-semibold">{filteredCases.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredCases.length)}</strong> of{' '}
                 <strong className="text-cl-ink font-semibold">{filteredCases.length}</strong> filtered cases
               </span>
               <span className="text-cl-border">|</span>
@@ -494,12 +495,15 @@ export function TodayView({
               </span>
             </div>
 
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              size="sm"
-            />
+            <div className="flex items-center justify-end overflow-x-auto max-w-full">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                size="sm"
+                delta={1}
+              />
+            </div>
           </div>
         </div>
 

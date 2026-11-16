@@ -78,8 +78,8 @@ export function CustomDropdown({
     : 'bg-cl-mist border-cl-border text-cl-ink hover:bg-cl-page-bg';
 
   const menuStyles = isDark
-    ? 'bg-cl-navy border-white/20 text-white shadow-drawer'
-    : 'bg-white border-cl-border text-cl-ink shadow-card';
+    ? 'bg-cl-navy border-white/20 text-white shadow-2xl'
+    : 'bg-white border-cl-border text-cl-ink shadow-xl shadow-cl-navy/15';
 
   return (
     <div

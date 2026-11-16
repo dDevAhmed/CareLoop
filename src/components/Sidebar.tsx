@@ -162,7 +162,7 @@ export function Sidebar({
   return (
     <aside className="w-[232px] min-w-[232px] max-w-[232px] h-screen bg-cl-navy text-white flex flex-col border-r border-white/10 select-none flex-shrink-0 sticky top-0 z-30 overflow-hidden">
       {/* Brand Header */}
-      <div className="p-4 border-b border-white/10 flex items-center flex-shrink-0">
+      <div className="h-16 px-4 border-b border-white/10 flex items-center flex-shrink-0">
         <img
           src="/careloop_glyph.png"
           alt="CareLoop Mark"

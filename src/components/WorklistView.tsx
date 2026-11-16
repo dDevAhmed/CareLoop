@@ -177,19 +177,22 @@ export function WorklistView({
 
       {/* Pagination Footer */}
       {tasks.length > 0 && (
-        <div className="p-4 bg-white rounded-cl-md border border-cl-border flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-cl-muted">
-          <span>
+        <div className="p-3.5 bg-white rounded-cl-md border border-cl-border flex flex-col xl:flex-row items-center justify-between gap-3 text-xs text-cl-muted">
+          <span className="whitespace-nowrap flex-shrink-0">
             Showing <strong className="text-cl-ink font-semibold">{(currentPage - 1) * PAGE_SIZE + 1}</strong>–
             <strong className="text-cl-ink font-semibold">{Math.min(currentPage * PAGE_SIZE, tasks.length)}</strong> of{' '}
             <strong className="text-cl-ink font-semibold">{tasks.length}</strong> actionable tasks
           </span>
 
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            size="sm"
-          />
+          <div className="flex items-center justify-end overflow-x-auto max-w-full">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              size="sm"
+              delta={1}
+            />
+          </div>
         </div>
       )}
     </div>
