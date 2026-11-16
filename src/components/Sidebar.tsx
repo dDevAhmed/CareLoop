@@ -324,25 +324,32 @@ export function Sidebar({
           <span>Open Patient PWA</span>
         </Link>
 
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex items-center space-x-2 truncate">
-            <div className="w-7 h-7 rounded-full bg-cl-deep-teal flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+        {/* User Profile & Role Switcher Card */}
+        <div className="bg-white/5 border border-white/10 rounded-cl-sm p-2.5 space-y-2">
+          {/* User Info */}
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-full bg-cl-deep-teal flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm border border-white/20">
               {activeRole === 'CLINICIAN' ? 'DR' : activeRole === 'NAVIGATOR' ? 'NL' : 'PA'}
             </div>
-            <div className="truncate text-left">
-              <div className="text-xs font-semibold text-white leading-tight truncate">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-bold text-white leading-tight truncate">
                 {activeRole === 'CLINICIAN'
                   ? 'Dr. Fatima'
                   : activeRole === 'NAVIGATOR'
-                  ? 'Layla (Navigator)'
+                  ? 'Navigator Layla'
                   : 'Programme Analyst'}
               </div>
-              <div className="text-[10px] text-white/60 capitalize">
-                {activeRole.toLowerCase()}
+              <div className="text-[10px] text-white/60 capitalize mt-0.5 truncate">
+                {activeRole === 'CLINICIAN'
+                  ? 'Clinician · Lead'
+                  : activeRole === 'NAVIGATOR'
+                  ? 'Care Navigator'
+                  : 'Healthcare Analyst'}
               </div>
             </div>
           </div>
 
+          {/* Role Dropdown */}
           <CustomDropdown
             value={activeRole}
             onChange={(val) => setActiveRole(val as UserRole)}
@@ -351,9 +358,10 @@ export function Sidebar({
               { value: 'CLINICIAN', label: 'Clinician' },
               { value: 'PROGRAMME_ANALYST', label: 'Analyst' },
             ]}
+            label="Role:"
             variant="dark"
             size="sm"
-            align="right"
+            width="w-full"
             direction="up"
           />
         </div>

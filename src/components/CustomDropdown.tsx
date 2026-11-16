@@ -171,9 +171,13 @@ export function CustomDropdown({
         <div
           className={`absolute ${
             computedDirection === 'up' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
-          } min-w-[140px] max-h-60 overflow-y-auto border rounded-cl-sm py-1 z-50 ${
-            align === 'right' ? 'right-0' : 'left-0'
-          } ${menuStyles} ${width === 'w-full' ? 'w-full' : ''} ${menuClassName}`}
+          } ${
+            width === 'w-full'
+              ? 'left-0 right-0 w-full'
+              : align === 'right'
+              ? 'right-0 min-w-[140px]'
+              : 'left-0 min-w-[140px]'
+          } max-h-60 overflow-y-auto border rounded-cl-sm py-1 z-50 ${menuStyles} ${menuClassName}`}
         >
           {options.length === 0 ? (
             <div className={`px-3 py-2 text-xs ${isDark ? 'text-white/50' : 'text-cl-muted'}`}>
