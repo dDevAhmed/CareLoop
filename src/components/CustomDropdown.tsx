@@ -20,6 +20,7 @@ export interface CustomDropdownProps {
   disabled?: boolean;
   align?: 'left' | 'right';
   width?: string;
+  direction?: 'up' | 'down' | 'auto';
 }
 
 export function CustomDropdown({
@@ -36,11 +37,68 @@ export function CustomDropdown({
   disabled = false,
   align = 'left',
   width = 'w-auto',
+  direction = 'auto',
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [computedDirection, setComputedDirection] = useState<'down' | 'up'>(
+    direction === 'up' ? 'up' : 'down'
+  );
+  const [computedAlign, setComputedAlign] = useState<'left' | 'right'>(
+    align === 'right' ? 'right' : 'left'
+  );
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
+
+  // Compute popover placement (vertical direction and horizontal alignment)
+  const updatePosition = () => {
+    // 1. Vertical direction
+    if (direction === 'up') {
+      setComputedDirection('up');
+    } else if (direction === 'down') {
+      setComputedDirection('down');
+    } else if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      // If remaining viewport below the trigger is less than 220px and there's more room above, pop upwards
+      if (spaceBelow < 220 && spaceAbove > spaceBelow) {
+        setComputedDirection('up');
+      } else {
+        setComputedDirection('down');
+      }
+    }
+
+    // 2. Horizontal alignment: flip to right-aligned if opening to the right would overflow viewport
+    if (align === 'right') {
+      setComputedAlign('right');
+    } else if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceRight = window.innerWidth - rect.left;
+      // If remaining viewport to the right is less than 260px and there's room on the left, align right
+      if (spaceRight < 260 && rect.right > 200) {
+        setComputedAlign('right');
+      } else {
+        setComputedAlign('left');
+      }
+    } else {
+      setComputedAlign('left');
+    }
+  };
+
+  const handleToggle = () => {
+    if (disabled) return;
+    if (!isOpen) {
+      updatePosition();
+    }
+    setIsOpen((prev) => !prev);
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+    }
+  }, [isOpen, direction, align]);
 
   // Close on outside click
   useEffect(() => {
@@ -78,8 +136,8 @@ export function CustomDropdown({
     : 'bg-cl-mist border-cl-border text-cl-ink hover:bg-cl-page-bg';
 
   const menuStyles = isDark
-    ? 'bg-cl-navy border-white/20 text-white shadow-drawer'
-    : 'bg-white border-cl-border text-cl-ink shadow-card';
+    ? 'bg-cl-navy border-white/20 text-white shadow-2xl'
+    : 'bg-white border-cl-border text-cl-ink shadow-xl shadow-cl-navy/15';
 
   return (
     <div
@@ -90,7 +148,7 @@ export function CustomDropdown({
       <button
         type="button"
         disabled={disabled}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className={`flex items-center justify-between border rounded-cl-sm font-medium transition-colors focus:outline-none focus:ring-1 focus:ring-cl-teal ${
           isSm ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-xs'
         } ${baseButtonStyles} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${
@@ -127,9 +185,15 @@ export function CustomDropdown({
       {/* Popover Options List */}
       {isOpen && (
         <div
-          className={`absolute mt-1 min-w-[140px] max-h-60 overflow-y-auto border rounded-cl-sm py-1 z-50 ${
-            align === 'right' ? 'right-0' : 'left-0'
-          } ${menuStyles} ${width === 'w-full' ? 'w-full' : ''} ${menuClassName}`}
+          className={`absolute ${
+            computedDirection === 'up' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
+          } ${
+            width === 'w-full'
+              ? 'left-0 right-0 w-full'
+              : computedAlign === 'right'
+              ? 'right-0 min-w-[160px]'
+              : 'left-0 min-w-[160px]'
+          } max-h-60 overflow-y-auto border rounded-cl-sm py-1 z-50 ${menuStyles} ${menuClassName}`}
         >
           {options.length === 0 ? (
             <div className={`px-3 py-2 text-xs ${isDark ? 'text-white/50' : 'text-cl-muted'}`}>

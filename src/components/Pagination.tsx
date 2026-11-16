@@ -106,26 +106,26 @@ export function Pagination({
   };
 
   // Dimensions based on size prop
-  const heightClass = size === 'sm' ? 'h-[32px]' : 'h-[38px]';
-  const minWidthClass = size === 'sm' ? 'min-w-[32px]' : 'min-w-[38px]';
+  const heightClass = size === 'sm' ? 'h-[30px]' : 'h-[38px]';
+  const minWidthClass = size === 'sm' ? 'min-w-[30px]' : 'min-w-[38px]';
   const textClass = size === 'sm' ? 'text-xs' : 'text-sm';
-  const paddingXClass = size === 'sm' ? 'px-2.5' : 'px-3.5';
+  const paddingXClass = size === 'sm' ? 'px-2' : 'px-3.5';
 
   return (
     <nav
       role="navigation"
       aria-label="Pagination Navigation"
-      className={`flex flex-wrap items-center gap-2 select-none ${className}`}
+      className={`flex items-center gap-2 select-none flex-nowrap ${className}`}
     >
       {/* Primary pagination controls */}
-      <div className="flex items-center space-x-1.5 flex-wrap">
+      <div className="flex items-center space-x-1 flex-nowrap">
         {/* Previous Button */}
         <button
           type="button"
           onClick={handlePrev}
           disabled={!canPrev}
           aria-label="Previous Page"
-          className={`flex items-center space-x-1.5 ${paddingXClass} ${heightClass} ${textClass} font-semibold rounded-lg border border-cl-border transition-colors ${
+          className={`flex items-center space-x-1 ${paddingXClass} ${heightClass} ${textClass} font-semibold rounded-lg border border-cl-border transition-colors ${
             canPrev
               ? 'bg-white text-cl-ink hover:bg-cl-mist hover:text-cl-deep-teal hover:border-cl-deep-teal/40 shadow-xs'
               : 'bg-cl-page-bg text-cl-muted opacity-50 cursor-not-allowed pointer-events-none'
@@ -144,7 +144,7 @@ export function Pagination({
               <span
                 key={`ellipsis-${index}`}
                 aria-hidden="true"
-                className={`flex items-center justify-center ${minWidthClass} ${heightClass} ${textClass} font-semibold rounded-lg border border-cl-border bg-white text-cl-muted cursor-default px-2`}
+                className={`flex items-center justify-center ${minWidthClass} ${heightClass} ${textClass} font-semibold rounded-lg border border-cl-border bg-white text-cl-muted cursor-default px-1.5`}
               >
                 ...
               </span>
@@ -160,7 +160,7 @@ export function Pagination({
               onClick={() => onPageChange(item)}
               aria-label={`Page ${item}`}
               aria-current={isCurrent ? 'page' : undefined}
-              className={`flex items-center justify-center ${minWidthClass} ${heightClass} ${textClass} px-2.5 font-semibold rounded-lg border transition-colors shadow-xs ${
+              className={`flex items-center justify-center ${minWidthClass} ${heightClass} ${textClass} px-2 font-semibold rounded-lg border transition-colors shadow-xs ${
                 isCurrent
                   ? 'bg-cl-deep-teal text-white border-cl-deep-teal font-bold shadow-sm'
                   : 'bg-white text-cl-ink border-cl-border hover:bg-cl-mist hover:text-cl-deep-teal hover:border-cl-deep-teal/40'
@@ -177,7 +177,7 @@ export function Pagination({
           onClick={handleNext}
           disabled={!canNext}
           aria-label="Next Page"
-          className={`flex items-center space-x-1.5 ${paddingXClass} ${heightClass} ${textClass} font-semibold rounded-lg border border-cl-border transition-colors ${
+          className={`flex items-center space-x-1 ${paddingXClass} ${heightClass} ${textClass} font-semibold rounded-lg border border-cl-border transition-colors ${
             canNext
               ? 'bg-white text-cl-ink hover:bg-cl-mist hover:text-cl-deep-teal hover:border-cl-deep-teal/40 shadow-xs'
               : 'bg-cl-page-bg text-cl-muted opacity-50 cursor-not-allowed pointer-events-none'
@@ -194,10 +194,10 @@ export function Pagination({
       {showGoTo && totalPages > 1 && (
         <form
           onSubmit={handleGoTo}
-          className="flex items-center space-x-2 pl-1 sm:pl-3"
+          className="flex items-center space-x-1.5 pl-2 border-l border-cl-border flex-nowrap flex-shrink-0"
         >
           <span className={`${textClass} font-medium text-cl-muted whitespace-nowrap`}>
-            Go to page
+            Go to
           </span>
           <input
             type="number"
@@ -212,13 +212,13 @@ export function Pagination({
             }}
             placeholder={String(currentPage)}
             aria-label="Target page number"
-            className={`w-14 sm:w-16 ${heightClass} px-2 text-center ${textClass} font-semibold rounded-lg border border-cl-border bg-white text-cl-ink focus:border-cl-deep-teal focus:ring-1 focus:ring-cl-deep-teal outline-none transition-colors shadow-xs`}
+            className={`w-11 sm:w-12 ${heightClass} px-1.5 text-center ${textClass} font-semibold rounded-lg border border-cl-border bg-white text-cl-ink focus:border-cl-deep-teal focus:ring-1 focus:ring-cl-deep-teal outline-none transition-colors shadow-xs`}
           />
           <button
             type="button"
             onClick={handleGoTo}
             disabled={!goToInput.trim()}
-            className={`flex items-center space-x-1 px-3 ${heightClass} ${textClass} font-semibold rounded-lg border border-cl-border transition-colors ${
+            className={`flex items-center space-x-1 px-2.5 ${heightClass} ${textClass} font-semibold rounded-lg border border-cl-border transition-colors ${
               goToInput.trim()
                 ? 'bg-white text-cl-ink hover:bg-cl-mist hover:text-cl-deep-teal hover:border-cl-deep-teal/40 shadow-xs'
                 : 'bg-cl-page-bg text-cl-muted opacity-50 cursor-not-allowed pointer-events-none'

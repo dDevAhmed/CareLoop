@@ -1,25 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Pagination } from './Pagination';
+import { CustomDropdown } from './CustomDropdown';
 
-export function AuditTrailView() {
+export interface AuditTrailViewProps {
+  activePackId?: string;
+}
+
+export function AuditTrailView({ activePackId }: AuditTrailViewProps) {
   const [auditData, setAuditData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 15;
 
-  useEffect(() => {
-    fetchAudit();
-  }, []);
+  // Filters state
+  const [dateFilter, setDateFilter] = useState<string>('');
+  const [actionFilter, setActionFilter] = useState<string>('all');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  async function fetchAudit() {
+  const fetchAudit = useCallback(async (page: number = currentPage) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/audit');
-      const data = await res.json();
-      setAuditData(data);
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('limit', String(pageSize));
+      if (activePackId) params.set('pack', activePackId);
+      if (actionFilter && actionFilter !== 'all') params.set('action', actionFilter);
+      if (roleFilter && roleFilter !== 'all') params.set('actorRole', roleFilter);
+      if (dateFilter) params.set('date', dateFilter);
+      if (searchQuery.trim()) params.set('search', searchQuery.trim());
+
+      const res = await fetch(`/api/audit?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAuditData(data);
+      }
     } catch (err) {
       console.error('Failed to load audit trail', err);
     } finally {
       setLoading(false);
     }
-  }
+  }, [activePackId, currentPage, pageSize, actionFilter, roleFilter, dateFilter, searchQuery]);
+
+  useEffect(() => {
+    fetchAudit(currentPage);
+  }, [fetchAudit, currentPage]);
+
+  const handleResetFilters = () => {
+    setDateFilter('');
+    setActionFilter('all');
+    setRoleFilter('all');
+    setSearchQuery('');
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = Boolean(
+    dateFilter || actionFilter !== 'all' || roleFilter !== 'all' || searchQuery.trim()
+  );
+
+  const availableActions: string[] = useMemo(() => {
+    return auditData?.availableActions || [];
+  }, [auditData?.availableActions]);
+
+  const availableRoles: string[] = useMemo(() => {
+    return auditData?.availableRoles || [];
+  }, [auditData?.availableRoles]);
+
+  const filteredTotal = auditData?.filteredTotal ?? 0;
+  const totalPages = auditData?.totalPages ?? 1;
 
   return (
     <div className="space-y-6">
@@ -37,15 +85,105 @@ export function AuditTrailView() {
         <div className="flex items-center space-x-2">
           {auditData?.verified && (
             <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200">
-              ✓ Tamper-Evident Chain Verified ({auditData.totalEntries} blocks)
+              ✓ Tamper-Evident Chain Verified ({auditData.totalEntries?.toLocaleString() ?? 0} blocks)
             </span>
           )}
           <button
-            onClick={fetchAudit}
-            className="px-3 py-1.5 bg-cl-navy hover:bg-cl-deep-teal text-white rounded-cl-sm text-xs font-bold transition-colors"
+            onClick={() => fetchAudit(1)}
+            disabled={loading}
+            className="px-3 py-1.5 bg-cl-navy hover:bg-cl-deep-teal text-white rounded-cl-sm text-xs font-bold transition-colors disabled:opacity-50"
           >
-            Re-verify Chain
+            {loading ? 'Verifying...' : 'Re-verify Chain'}
           </button>
+        </div>
+      </div>
+
+      {/* Filter & Search Bar */}
+      <div className="bg-white p-3.5 rounded-cl-md border border-cl-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        {/* Left: Quick Search */}
+        <div className="flex-1 max-w-sm relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-cl-muted">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder="Search block #, case, actor, hash..."
+            className="w-full pl-9 pr-3 py-1.5 text-xs bg-cl-page-bg border border-cl-border rounded-cl-sm text-cl-ink placeholder-cl-muted focus:outline-none focus:border-cl-teal focus:ring-1 focus:ring-cl-teal transition-all"
+          />
+        </div>
+
+        {/* Right: Date, Action, Actor Role Filters */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          {/* Date Filter */}
+          <div className="flex items-center space-x-1.5">
+            <span className="text-cl-muted font-semibold">Date:</span>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => {
+                setDateFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="py-1 px-2 text-xs bg-cl-mist border border-cl-border rounded-cl-sm text-cl-ink focus:outline-none focus:border-cl-teal"
+            />
+          </div>
+
+          {/* Action Filter */}
+          <CustomDropdown
+            value={actionFilter}
+            onChange={(val) => {
+              setActionFilter(val);
+              setCurrentPage(1);
+            }}
+            options={[
+              { value: 'all', label: 'All Actions' },
+              ...availableActions.map((a) => ({
+                value: a,
+                label: a.replace('CASE_STATE_TRANSITION_', '').replace(/_/g, ' '),
+              })),
+            ]}
+            label="Action:"
+            variant="light"
+            size="sm"
+            align="right"
+          />
+
+          {/* Actor Role Filter */}
+          <CustomDropdown
+            value={roleFilter}
+            onChange={(val) => {
+              setRoleFilter(val);
+              setCurrentPage(1);
+            }}
+            options={[
+              { value: 'all', label: 'All Roles' },
+              ...availableRoles.map((r) => ({
+                value: r,
+                label: r.replace(/_/g, ' '),
+              })),
+            ]}
+            label="Role:"
+            variant="light"
+            size="sm"
+            align="right"
+          />
+
+          {/* Reset Filters */}
+          {hasActiveFilters && (
+            <button
+              onClick={handleResetFilters}
+              className="px-2.5 py-1 text-xs font-semibold text-cl-alert-text bg-cl-alert-tint border border-cl-alert-text/20 rounded-cl-sm hover:bg-cl-alert-text hover:text-white transition-colors"
+            >
+              Reset
+            </button>
+          )}
         </div>
       </div>
 
@@ -78,17 +216,24 @@ export function AuditTrailView() {
               ) : !auditData?.recentEntries || auditData.recentEntries.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-cl-muted font-sans text-xs">
-                    No audit records found.
+                    No cryptographic audit records matching criteria.
                   </td>
                 </tr>
               ) : (
                 auditData.recentEntries.map((e: any) => (
-                  <tr key={e.id} className="hover:bg-cl-page-bg/40 font-mono">
+                  <tr key={e.id} className="hover:bg-cl-page-bg/40 font-mono transition-colors">
                     <td className="py-2 px-3 font-bold text-cl-ink">#{e.sequenceNumber}</td>
-                    <td className="py-2 px-3 font-sans font-semibold text-cl-deep-teal">{e.action}</td>
-                    <td className="py-2 px-3 text-cl-muted">{e.resourceType}:{e.resourceId}</td>
-                    <td className="py-2 px-3 text-cl-ink font-sans">{e.actorRole} ({e.actorId})</td>
-                    <td className="py-2 px-3 text-cl-muted">{e.timestamp?.substring(0, 16)}</td>
+                    <td className="py-2 px-3 font-sans font-semibold text-cl-deep-teal">
+                      <span className="px-2 py-0.5 rounded bg-cl-mist text-cl-deep-teal text-[11px] font-bold">
+                        {e.action}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-cl-muted font-mono">{e.resourceType}:{e.resourceId}</td>
+                    <td className="py-2 px-3 text-cl-ink font-sans">
+                      <span className="font-semibold">{e.actorRole}</span>
+                      {e.actorId && <span className="text-cl-muted ml-1 font-mono text-[10px]">({e.actorId})</span>}
+                    </td>
+                    <td className="py-2 px-3 text-cl-muted">{e.timestamp?.substring(0, 16).replace('T', ' ')}</td>
                     <td className="py-2 px-3 text-cl-muted truncate max-w-[140px]" title={e.hash}>
                       {e.hash?.substring(0, 16)}...
                     </td>
@@ -97,6 +242,29 @@ export function AuditTrailView() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination & Ledger Summary Footer */}
+        <div className="p-3 bg-cl-page-bg border-t border-cl-border flex flex-col gap-2.5">
+          <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-cl-muted font-medium">
+            <span>
+              Showing <strong className="text-cl-ink">{filteredTotal > 0 ? (currentPage - 1) * pageSize + 1 : 0}–{Math.min(currentPage * pageSize, filteredTotal)}</strong> of <strong className="text-cl-ink">{filteredTotal.toLocaleString()}</strong> cryptographic blocks (Page {currentPage} of {totalPages})
+            </span>
+            <span className="text-[11px] font-mono text-cl-muted">
+              Chain Head: <span className="text-cl-deep-teal font-semibold">{auditData?.latestHash ? `${auditData.latestHash.substring(0, 16)}...` : 'Active'}</span>
+            </span>
+          </div>
+
+          <div className="flex justify-center pt-2 border-t border-cl-border/60">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => setCurrentPage(page)}
+              size="sm"
+              delta={2}
+              showGoTo={true}
+            />
+          </div>
         </div>
       </div>
 
@@ -177,4 +345,3 @@ export function AuditTrailView() {
     </div>
   );
 }
-

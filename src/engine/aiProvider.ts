@@ -40,7 +40,7 @@ export function calculateDropOffRisk(
   const issuedTime = new Date(caseItem.createdAt).getTime();
   const hoursSinceIssue = (now.getTime() - issuedTime) / (1000 * 60 * 60);
 
-  if (!caseItem.acknowledgedAt) {
+  if (!caseItem.milestones?.acknowledgedAt) {
     if (hoursSinceIssue > 72 || caseItem.isOverdue) {
       factors.push({
         factor: 'UNACKNOWLEDGED_OVERDUE',
@@ -72,7 +72,7 @@ export function calculateDropOffRisk(
     totalScore += 25;
   }
 
-  if (recentBarriers.includes('TRANSPORT') || recentBarriers.includes('FINANCIAL_OR_INSURANCE')) {
+  if (recentBarriers.includes('TRANSPORT') || recentBarriers.includes('COST_INSURANCE')) {
     factors.push({
       factor: 'LOGISTICAL_OR_INSURANCE_BARRIER',
       weight: 20,
@@ -81,7 +81,7 @@ export function calculateDropOffRisk(
     totalScore += 20;
   }
 
-  if (recentBarriers.includes('FEAR_OR_ANXIETY')) {
+  if (recentBarriers.includes('FEAR_ANXIETY')) {
     factors.push({
       factor: 'PSYCHOSOCIAL_AVOIDANCE',
       weight: 15,
@@ -98,7 +98,7 @@ export function calculateDropOffRisk(
       description: 'Specialist facility rejected referral. Case stalled without active clinic destination.',
     });
     totalScore += 35;
-  } else if (caseItem.currentState === 'REFERRAL_SENT' && !caseItem.referralAcceptedAt) {
+  } else if (caseItem.currentState === 'REFERRAL_SENT' && !caseItem.milestones?.referralAcceptedAt) {
     factors.push({
       factor: 'REFERRAL_PENDING_ACCEPTANCE',
       weight: 15,
@@ -108,7 +108,7 @@ export function calculateDropOffRisk(
   }
 
   // 4. Clinical Urgency without Attendance
-  if (caseItem.urgency === 'CRITICAL' && !caseItem.attendedAt) {
+  if (caseItem.urgency === 'CRITICAL' && !caseItem.milestones?.attendedAt) {
     factors.push({
       factor: 'CRITICAL_URGENCY_UNATTENDED',
       weight: 20,
@@ -178,17 +178,17 @@ SLA Status: ${caseItem.isOverdue ? 'EXCEEDED (OVERDUE)' : 'ON TRACK'}
 Identified Barriers: ${barrierText}
 Total Outreach Attempts: ${outreachAttempts.length}
 Key Milestone Progress:
-- Notified: ${caseItem.notificationDeliveredAt ? 'Yes' : 'No'}
-- Acknowledged: ${caseItem.acknowledgedAt ? 'Yes' : 'No'}
-- Understanding Confirmed: ${caseItem.understandingConfirmedAt ? 'Yes' : 'No'}
-- Referral Created: ${caseItem.referralCreatedAt ? 'Yes' : 'No'}
-- Diagnostic Disposition: ${caseItem.diagnosticDispositionDocumentedAt ? 'Yes' : 'No'}
+- Notified: ${caseItem.milestones?.notificationDeliveredAt ? 'Yes' : 'No'}
+- Acknowledged: ${caseItem.milestones?.acknowledgedAt ? 'Yes' : 'No'}
+- Understanding Confirmed: ${caseItem.milestones?.understandingConfirmedAt ? 'Yes' : 'No'}
+- Referral Created: ${caseItem.milestones?.referralCreatedAt ? 'Yes' : 'No'}
+- Diagnostic Disposition: ${caseItem.milestones?.diagnosticDispositionDocumentedAt ? 'Yes' : 'No'}
 Next Best Action: ${
     caseItem.currentState === 'REJECTED'
       ? 'Reassign referral to accredited secondary diagnostic center.'
-      : !caseItem.acknowledgedAt
+      : !caseItem.milestones?.acknowledgedAt
       ? 'Conduct structured phone navigation to secure acknowledgment and address patient questions.'
-      : !caseItem.appointmentBookedAt
+      : !caseItem.milestones?.appointmentBookedAt
       ? 'Facilitate direct appointment booking at receiving endoscopy or imaging suite.'
       : 'Verify appointment attendance and obtain pathology report.'
   }`;
