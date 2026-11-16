@@ -29,7 +29,7 @@ export function TopBar({
   }, []);
 
   return (
-    <header className="h-16 bg-white border-b border-cl-border px-6 flex items-center justify-between select-none sticky top-0 z-20">
+    <header className="h-16 min-h-[64px] max-h-[64px] bg-white border-b border-cl-border px-6 flex items-center justify-between select-none flex-shrink-0 sticky top-0 z-20">
       {/* Global Search with Cmd/Ctrl-K */}
       <div className="flex-1 max-w-md relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-cl-muted">

@@ -178,7 +178,7 @@ export default function CareLoopDashboard() {
   const counts = useMemo(() => {
     const critical = cases.filter((c) => c.urgency === 'CRITICAL' && c.currentState !== 'CLOSED').length;
     const overdue = cases.filter((c) => c.isOverdue && c.currentState !== 'CLOSED').length;
-    const dueSoon = cases.filter((c) => !c.isOverdue && c.slaWorkingDaysRemaining <= 5 && c.currentState !== 'CLOSED').length;
+    const dueSoon = cases.filter((c) => !c.isOverdue && (c.slaWorkingDaysRemaining ?? 0) <= 5 && c.currentState !== 'CLOSED').length;
     const referrals = cases.filter(
       (c) =>
         c.milestones?.referralCreatedAt ||
@@ -220,7 +220,7 @@ export default function CareLoopDashboard() {
       />
 
       {/* Main Content Area (separate scrolling) */}
-      <div className="flex-1 h-screen flex flex-col min-w-0 overflow-y-auto">
+      <div className="flex-1 h-screen flex flex-col min-w-0 overflow-hidden">
         {/* Top Bar with Cmd/Ctrl-K Search, Demo Pill & Language Toggle */}
         <TopBar
           searchQuery={searchQuery}
@@ -229,8 +229,9 @@ export default function CareLoopDashboard() {
           setLang={setLang}
         />
 
-        {/* Dynamic Route Content */}
-        <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
+        {/* Dynamic Route Content - Scrolls underneath TopBar */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <main className="p-6 max-w-7xl w-full mx-auto">
           {activeTab === 'today' && (
             <TodayView
               cases={cases}
@@ -294,6 +295,7 @@ export default function CareLoopDashboard() {
 
           {activeTab === 'provenance' && <AuditTrailView />}
         </main>
+        </div>
       </div>
 
       {/* Full Case Detail Modal */}

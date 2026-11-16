@@ -37,11 +37,11 @@ export function TodayView({
   const criticalCases = useMemo(() => cases.filter((c) => c.urgency === 'CRITICAL' && c.currentState !== 'CLOSED'), [cases]);
   const overdueCases = useMemo(() => cases.filter((c) => c.isOverdue && c.currentState !== 'CLOSED'), [cases]);
   const dueThisWeekCases = useMemo(
-    () => cases.filter((c) => !c.isOverdue && c.slaWorkingDaysRemaining <= 5 && c.currentState !== 'CLOSED'),
+    () => cases.filter((c) => !c.isOverdue && (c.slaWorkingDaysRemaining ?? 0) <= 5 && c.currentState !== 'CLOSED'),
     [cases]
   );
   const onTrackCases = useMemo(
-    () => cases.filter((c) => !c.isOverdue && c.slaWorkingDaysRemaining > 5 && c.currentState !== 'CLOSED'),
+    () => cases.filter((c) => !c.isOverdue && (c.slaWorkingDaysRemaining ?? 0) > 5 && c.currentState !== 'CLOSED'),
     [cases]
   );
 
@@ -81,9 +81,9 @@ export function TodayView({
     } else if (selectedQueueTab === 'overdue') {
       pool = pool.filter((c) => c.isOverdue && c.currentState !== 'CLOSED');
     } else if (selectedQueueTab === 'dueThisWeek') {
-      pool = pool.filter((c) => !c.isOverdue && c.slaWorkingDaysRemaining <= 5 && c.currentState !== 'CLOSED');
+      pool = pool.filter((c) => !c.isOverdue && (c.slaWorkingDaysRemaining ?? 0) <= 5 && c.currentState !== 'CLOSED');
     } else if (selectedQueueTab === 'onTrack') {
-      pool = pool.filter((c) => !c.isOverdue && c.slaWorkingDaysRemaining > 5 && c.currentState !== 'CLOSED');
+      pool = pool.filter((c) => !c.isOverdue && (c.slaWorkingDaysRemaining ?? 0) > 5 && c.currentState !== 'CLOSED');
     }
 
     // Filter by Pathway
@@ -369,8 +369,8 @@ export function TodayView({
                     const isSelected = activeDrawerCase?.id === c.id;
                     const isCritical = c.urgency === 'CRITICAL';
                     const isOverdue = c.isOverdue;
-                    const progress = getSlaProgressPercent(c.slaWorkingDaysRemaining);
-                    const slaText = formatSlaText(c.slaWorkingDaysRemaining, isOverdue);
+                    const progress = getSlaProgressPercent(c.slaWorkingDaysRemaining ?? 0);
+                    const slaText = formatSlaText(c.slaWorkingDaysRemaining ?? 0, isOverdue);
 
                     return (
                       <tr
@@ -482,26 +482,27 @@ export function TodayView({
             </table>
           </div>
 
-          {/* Table Footer with Pagination */}
-          <div className="p-3 border-t border-cl-border bg-cl-page-bg flex flex-col xl:flex-row items-center justify-between gap-3 text-xs text-cl-muted">
-            <div className="flex items-center space-x-2 whitespace-nowrap flex-shrink-0">
+          {/* Table Footer with Structured 2-Row Pagination */}
+          <div className="p-3.5 border-t border-cl-border bg-cl-page-bg flex flex-col gap-2.5 text-xs text-cl-muted">
+            {/* Row 1: Status & Cohort Summary */}
+            <div className="flex items-center justify-between px-1">
               <span>
-                Showing <strong className="text-cl-ink font-semibold">{filteredCases.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredCases.length)}</strong> of{' '}
+                Showing <strong className="text-cl-ink font-semibold">{filteredCases.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}</strong>–
+                <strong className="text-cl-ink font-semibold">{Math.min(currentPage * PAGE_SIZE, filteredCases.length)}</strong> of{' '}
                 <strong className="text-cl-ink font-semibold">{filteredCases.length}</strong> filtered cases
               </span>
-              <span className="text-cl-border">|</span>
-              <span className="text-cl-muted">
-                Cohort: <strong className="text-cl-ink font-semibold">{totalCases}</strong>
+              <span>
+                Total Cohort: <strong className="text-cl-ink font-semibold">{totalCases}</strong>
               </span>
             </div>
 
-            <div className="flex items-center justify-end overflow-x-auto max-w-full">
+            {/* Row 2: Full-width Centered Pagination Controls */}
+            <div className="pt-2 border-t border-cl-border/60 flex items-center justify-center overflow-x-auto max-w-full">
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
                 size="sm"
-                delta={1}
               />
             </div>
           </div>
@@ -556,8 +557,8 @@ export function TodayView({
                 <div className="font-bold flex items-center justify-between">
                   <span>
                     {activeDrawerCase.isOverdue
-                      ? `⚠ ${formatSlaText(activeDrawerCase.slaWorkingDaysRemaining, true)}`
-                      : `⏱ ${formatSlaText(activeDrawerCase.slaWorkingDaysRemaining, false)}`}
+                      ? `⚠ ${formatSlaText(activeDrawerCase.slaWorkingDaysRemaining ?? 0, true)}`
+                      : `⏱ ${formatSlaText(activeDrawerCase.slaWorkingDaysRemaining ?? 0, false)}`}
                   </span>
                   <span className="text-[11px] font-normal opacity-90">
                     Deadline: {new Date(activeDrawerCase.clinicalDeadline).toLocaleDateString()}
