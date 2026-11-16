@@ -45,3 +45,4 @@ describe('Pagination Component Logic & Sliding Window Calculations', () => {
     expect(items).toEqual([1, '...', 9, 10, 11, '...', 50]);
   });
 });
+

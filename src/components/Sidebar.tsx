@@ -164,7 +164,7 @@ export function Sidebar({
       {/* Brand Header */}
       <div className="p-4 border-b border-white/10 flex items-center flex-shrink-0">
         <img
-          src="/brand/careloop-mark.svg"
+          src="/careloop_glyph.png"
           alt="CareLoop Mark"
           className="w-8 h-8 rounded-cl-sm mr-2.5 flex-shrink-0"
         />

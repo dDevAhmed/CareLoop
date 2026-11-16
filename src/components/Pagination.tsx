@@ -234,3 +234,4 @@ export function Pagination({
     </nav>
   );
 }
+
