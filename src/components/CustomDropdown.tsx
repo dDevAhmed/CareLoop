@@ -20,6 +20,7 @@ export interface CustomDropdownProps {
   disabled?: boolean;
   align?: 'left' | 'right';
   width?: string;
+  direction?: 'up' | 'down' | 'auto';
 }
 
 export function CustomDropdown({
@@ -36,11 +37,52 @@ export function CustomDropdown({
   disabled = false,
   align = 'left',
   width = 'w-auto',
+  direction = 'auto',
 }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [computedDirection, setComputedDirection] = useState<'down' | 'up'>(
+    direction === 'up' ? 'up' : 'down'
+  );
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
+
+  // Compute popover direction (upwards or downwards)
+  const updateDirection = () => {
+    if (direction === 'up') {
+      setComputedDirection('up');
+      return;
+    }
+    if (direction === 'down') {
+      setComputedDirection('down');
+      return;
+    }
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      // If remaining viewport below the trigger is less than 220px and there's more room above, pop upwards
+      if (spaceBelow < 220 && spaceAbove > spaceBelow) {
+        setComputedDirection('up');
+      } else {
+        setComputedDirection('down');
+      }
+    }
+  };
+
+  const handleToggle = () => {
+    if (disabled) return;
+    if (!isOpen) {
+      updateDirection();
+    }
+    setIsOpen((prev) => !prev);
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      updateDirection();
+    }
+  }, [isOpen, direction]);
 
   // Close on outside click
   useEffect(() => {
@@ -90,7 +132,7 @@ export function CustomDropdown({
       <button
         type="button"
         disabled={disabled}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className={`flex items-center justify-between border rounded-cl-sm font-medium transition-colors focus:outline-none focus:ring-1 focus:ring-cl-teal ${
           isSm ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-xs'
         } ${baseButtonStyles} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${
@@ -127,7 +169,9 @@ export function CustomDropdown({
       {/* Popover Options List */}
       {isOpen && (
         <div
-          className={`absolute mt-1 min-w-[140px] max-h-60 overflow-y-auto border rounded-cl-sm py-1 z-50 ${
+          className={`absolute ${
+            computedDirection === 'up' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
+          } min-w-[140px] max-h-60 overflow-y-auto border rounded-cl-sm py-1 z-50 ${
             align === 'right' ? 'right-0' : 'left-0'
           } ${menuStyles} ${width === 'w-full' ? 'w-full' : ''} ${menuClassName}`}
         >

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStore, getActivePackId, logAuditEvent } from '@/services/caseRepository';
 import { getCurrentDemoTime } from '@/services/demoClock';
 import { ConsultMessage, UserRole } from '@/types';
-export const EMERGENCY_NOTICE_BANNER =
+const EMERGENCY_NOTICE_BANNER =
   'EMERGENCY NOTICE: If you are experiencing acute pain, severe bleeding, or any medical emergency, call 999 (Abu Dhabi / UAE emergency services) or go to the nearest emergency room immediately. CareLoop communications are for routine closed-loop navigation only and are not continuously monitored.';
 
 export async function GET(

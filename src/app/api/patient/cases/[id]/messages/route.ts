@@ -4,7 +4,7 @@ import { getPatientFromToken, verifyPatientOwnsCase } from '@/services/patientAu
 import { getCurrentDemoTime } from '@/services/demoClock';
 import { ConsultMessage } from '@/types';
 
-export const EMERGENCY_NOTICE_BANNER =
+const EMERGENCY_NOTICE_BANNER =
   'EMERGENCY NOTICE: If you are experiencing acute severe symptoms (such as heavy bleeding, severe unremitting pain, shortness of breath, or collapse), call emergency services immediately (999 / 911 / 112) or proceed to the nearest emergency department. This messaging thread is not monitored 24/7 for acute medical emergencies.';
 
 export async function GET(

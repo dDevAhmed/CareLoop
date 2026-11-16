@@ -295,6 +295,7 @@ export function Sidebar({
                   variant="dark"
                   size="sm"
                   width="w-full"
+                  direction="auto"
                 />
 
                 {/* Unverified Rules Badge */}
@@ -353,6 +354,7 @@ export function Sidebar({
             variant="dark"
             size="sm"
             align="right"
+            direction="up"
           />
         </div>
       </div>
