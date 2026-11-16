@@ -159,9 +159,14 @@ export default function CareLoopDashboard() {
   async function handleSelectPack(packId: string) {
     try {
       const res = await fetch(`/api/packs/${packId}`, { method: 'POST' });
+      if (!res.ok) {
+        console.error('Failed to switch pack: HTTP', res.status);
+        return;
+      }
       const data = await res.json();
-      if (data.activePack) {
-        setActivePack(data.activePack);
+      const newPack = data.activePack || data.pack;
+      if (newPack) {
+        setActivePack(newPack);
         setActivePackIdState(packId);
         fetchCases();
       }
@@ -293,7 +298,7 @@ export default function CareLoopDashboard() {
             <CsvImportView onImportComplete={fetchCases} />
           )}
 
-          {activeTab === 'provenance' && <AuditTrailView />}
+          {activeTab === 'provenance' && <AuditTrailView activePackId={activePackId} />}
         </main>
         </div>
       </div>
