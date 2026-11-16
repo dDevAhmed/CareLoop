@@ -152,6 +152,7 @@ export function AuditTrailView({ activePackId }: AuditTrailViewProps) {
             label="Action:"
             variant="light"
             size="sm"
+            align="right"
           />
 
           {/* Actor Role Filter */}
@@ -171,6 +172,7 @@ export function AuditTrailView({ activePackId }: AuditTrailViewProps) {
             label="Role:"
             variant="light"
             size="sm"
+            align="right"
           />
 
           {/* Reset Filters */}

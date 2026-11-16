@@ -232,6 +232,7 @@ export function ReferralsView({
             ]}
             variant="light"
             size="sm"
+            align="right"
           />
 
           {/* Reset Filters */}
