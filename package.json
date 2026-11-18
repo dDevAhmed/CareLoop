@@ -9,7 +9,12 @@
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed": "vitest run src/scripts/runSeed.test.ts"
+    "seed": "vitest run src/scripts/runSeed.test.ts",
+    "demo:reset": "node src/scripts/resetStore.js"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   },
   "keywords": [
     "careloop",
