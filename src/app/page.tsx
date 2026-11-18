@@ -225,7 +225,7 @@ export default function CareLoopDashboard() {
       />
 
       {/* Main Content Area (separate scrolling) */}
-      <div className="flex-1 h-screen flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 h-screen flex flex-col min-w-0 overflow-visible">
         {/* Top Bar with Cmd/Ctrl-K Search, Demo Pill & Language Toggle */}
         <TopBar
           searchQuery={searchQuery}
@@ -235,7 +235,7 @@ export default function CareLoopDashboard() {
         />
 
         {/* Dynamic Route Content - Scrolls underneath TopBar */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           <main className="p-6 max-w-7xl w-full mx-auto">
           {activeTab === 'today' && (
             <TodayView

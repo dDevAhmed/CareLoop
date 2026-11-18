@@ -75,8 +75,8 @@ export function CustomDropdown({
     } else if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const spaceRight = window.innerWidth - rect.left;
-      // If remaining viewport to the right is less than 260px and there's room on the left, align right
-      if (spaceRight < 260 && rect.right > 200) {
+      // If remaining viewport to the right is less than 220px and there's room on the left, align right
+      if (spaceRight < 220 && rect.left > 100) {
         setComputedAlign('right');
       } else {
         setComputedAlign('left');
@@ -137,7 +137,7 @@ export function CustomDropdown({
 
   const menuStyles = isDark
     ? 'bg-cl-navy border-white/20 text-white shadow-2xl'
-    : 'bg-white border-cl-border text-cl-ink shadow-xl shadow-cl-navy/15';
+    : 'bg-white border-cl-border text-cl-ink shadow-2xl shadow-cl-navy/20';
 
   return (
     <div
@@ -191,9 +191,9 @@ export function CustomDropdown({
             width === 'w-full'
               ? 'left-0 right-0 w-full'
               : computedAlign === 'right'
-              ? 'right-0 min-w-[160px]'
-              : 'left-0 min-w-[160px]'
-          } max-h-60 overflow-y-auto border rounded-cl-sm py-1 z-50 ${menuStyles} ${menuClassName}`}
+              ? 'right-0 min-w-[180px]'
+              : 'left-0 min-w-[180px]'
+          } max-h-60 overflow-y-auto border rounded-cl-md py-1 z-50 ${menuStyles} ${menuClassName}`}
         >
           {options.length === 0 ? (
             <div className={`px-3 py-2 text-xs ${isDark ? 'text-white/50' : 'text-cl-muted'}`}>
