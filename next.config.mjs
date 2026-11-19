@@ -16,6 +16,8 @@ const nextConfig = {
   },
   webpack: (config) => {
     config.resolve.alias['@'] = path.resolve(__dirname, 'src');
+    config.resolve.alias['process'] = 'next/dist/compiled/process';
+    config.resolve.modules = [path.resolve(__dirname, 'node_modules')];
     return config;
   },
 };

@@ -483,21 +483,21 @@ export function TodayView({
           </div>
 
           {/* Table Footer with Structured 2-Row Pagination */}
-          <div className="p-3.5 border-t border-cl-border bg-cl-page-bg flex flex-col gap-2.5 text-xs text-cl-muted">
-            {/* Row 1: Status & Cohort Summary */}
-            <div className="flex items-center justify-between px-1">
-              <span>
-                Showing <strong className="text-cl-ink font-semibold">{filteredCases.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}</strong>–
-                <strong className="text-cl-ink font-semibold">{Math.min(currentPage * PAGE_SIZE, filteredCases.length)}</strong> of{' '}
-                <strong className="text-cl-ink font-semibold">{filteredCases.length}</strong> filtered cases
-              </span>
-              <span>
+          <div className="px-4 py-3 border-t border-cl-border bg-cl-page-bg flex flex-wrap items-center justify-between gap-2 text-xs text-cl-muted">
+            {/* Showing count */}
+            <span>
+              Showing{' '}
+              <strong className="text-cl-ink font-semibold">{filteredCases.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}</strong>–
+              <strong className="text-cl-ink font-semibold">{Math.min(currentPage * PAGE_SIZE, filteredCases.length)}</strong>{' '}
+              of{' '}
+              <strong className="text-cl-ink font-semibold">{filteredCases.length}</strong> filtered cases
+              <span className="ml-3 pl-3 border-l border-cl-border">
                 Total Cohort: <strong className="text-cl-ink font-semibold">{totalCases}</strong>
               </span>
-            </div>
+            </span>
 
-            {/* Row 2: Full-width Centered Pagination Controls */}
-            <div className="pt-2 border-t border-cl-border/60 flex items-center justify-center overflow-x-auto max-w-full">
+            {/* Pagination Controls */}
+            <div className="flex items-center overflow-x-auto">
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -509,7 +509,7 @@ export function TodayView({
         </div>
 
         {/* Right: 360px Preview Drawer */}
-        <div className="lg:col-span-4 w-full bg-white rounded-cl-md border border-cl-border shadow-sm p-4 space-y-4 sticky top-20">
+        <div className="lg:col-span-4 w-full bg-white rounded-cl-md border border-cl-border shadow-sm p-4 space-y-4 sticky top-[68px]">
           {activeDrawerCase ? (
             <>
               {/* Drawer Header */}
