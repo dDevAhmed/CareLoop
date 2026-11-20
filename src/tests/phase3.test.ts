@@ -42,11 +42,14 @@ describe('Phase 3: Population Analytics, Simulation Replay & Responsible AI Veri
       expect(med.baseline.completionPercentage).toBe(57);
       expect(med.defaultModel.completionPercentage).toBe(65.5);
       expect(med.optimisticModel.completionPercentage).toBe(76.5);
+      expect(med.optimisticModel.isApplied).toBe(true);
 
       const high = runSimulationScenario('high', 2000);
       expect(high.baseline.completionPercentage).toBe(79);
       expect(high.defaultModel.completionPercentage).toBe(87.5);
-      expect(high.optimisticModel.completionPercentage).toBe(98.5);
+      expect(high.optimisticModel.isApplied).toBe(false);
+      expect(high.optimisticModel.statusText).toBe('not applied');
+      expect(high.optimisticModel.completionPercentage).toBeNull();
     });
 
     it('parameterizes RCT effect sizes from published literature', () => {

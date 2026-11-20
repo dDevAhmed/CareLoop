@@ -12,68 +12,74 @@
     {
       "id": "SRC-2023-US-RCT",
       "type": "empirical_study",
-      "title": "Multicomponent EHR-Based Outreach and Navigation for Diagnostic Resolution Following Abnormal Screening",
+      "title": "US cluster RCT",
       "year": 2023,
-      "link": "https://jamanetwork.com/journals/jamanetworkopen",
-      "population": "US community health centers primary care cohort",
-      "empiricalFinding": "22.9% resolution in usual care vs 31.4% with EHR reminders + active navigation at 120 days",
-      "careLoopParameterUsage": "Baseline follow-up rate without navigation vs boosted completion when multi-channel navigator intervention triggers",
-      "limitation": "Conducted in US healthcare safety net with high underinsured proportion; does not fully reflect UAE insurance mandate."
+      "citation": "JAMA 2023 (PubMed 37815566)",
+      "link": "https://pubmed.ncbi.nlm.nih.gov/37815566/",
+      "population": "44 practices, 11,980 patients, 120-day follow-up",
+      "empiricalFinding": "22.9% usual care, 22.7% EHR reminders, 31.4% reminders+outreach+navigation",
+      "careLoopParameterUsage": "Baseline follow-up rate without navigation vs boosted completion when multi-channel navigator intervention triggers (+8.5% lift)",
+      "limitation": "Primary care network cohort within US healthcare safety net; 120-day follow-up endpoint."
     },
     {
       "id": "SRC-2020-TZA-SMS",
       "type": "empirical_study",
-      "title": "Mobile Phone Text Messaging to Improve Follow-Up After Screening: A Randomized Controlled Trial",
+      "title": "Tanzania RCT",
       "year": 2020,
-      "link": "https://www.thelancet.com/journals/langlo",
-      "population": "Sub-Saharan Africa primary screening clinics in Tanzania",
-      "empiricalFinding": "24.0% attendance in SMS arm vs 23.8% in control arm",
-      "careLoopParameterUsage": "Validates why single SMS reminders alone have ~24% acknowledgement rate and do not drive follow-up without active escalation",
-      "limitation": "Rural East African low-resource setting with basic mobile feature phones; differs from UAE smartphone/broadband landscape."
+      "citation": "JMIR 2020 (jmir.org/2020/4/e15863)",
+      "link": "https://www.jmir.org/2020/4/e15863/",
+      "population": "Tanzania cervical/breast screening clinics",
+      "empiricalFinding": "24.0% vs 23.8%, RR 1.02, no p-value claimed",
+      "careLoopParameterUsage": "Validates why single SMS reminders alone have ~24% acknowledgement rate and produce no statistically meaningful lift (0.0% lift) without active multi-tiered escalation",
+      "limitation": "Rural East African low-resource setting evaluating standalone automated SMS in isolation without human navigator escalation."
     },
     {
       "id": "SRC-2025-CMR-TEL",
       "type": "empirical_study",
-      "title": "Interactive Telephone Navigation versus Routine Notification for Diagnostic Follow-Up: A Randomized Trial",
+      "title": "Cameroon RCT",
       "year": 2025,
-      "link": "https://onlinelibrary.wiley.com/journal/10970215",
-      "population": "Cameroon urban and semi-urban screening facilities",
-      "empiricalFinding": "25.6% diagnostic resolution in telephone navigation arm vs 6.1% in standard care",
-      "careLoopParameterUsage": "Calibrates step-up efficacy parameter when escalation shifts from automated SMS to voice telephone outreach",
-      "limitation": "Conducted in low-resource standard-of-care baseline where standard follow-up was extremely low (6.1%)."
+      "citation": "Gynecologic Oncology Reports 2025 (doi: 10.1016/j.gore.2025.101745)",
+      "link": "https://doi.org/10.1016/j.gore.2025.101745",
+      "population": "Cameroon screening clinics",
+      "empiricalFinding": "25.6% vs 6.1%, aOR 3.97 (95% CI 1.29-12.17)",
+      "careLoopParameterUsage": "Calibrates optimistic upper-bound telephone navigation lift (+19.5% lift) in high-barrier settings",
+      "limitation": "Conducted in low-resource setting where baseline standard of care follow-up was 6.1%."
     },
     {
       "id": "SRC-2024-META-CERV",
       "type": "empirical_study",
-      "title": "Effectiveness of Single vs Multicomponent Interventions for Timely Follow-up of Abnormal Cancer Screening: A Systematic Review and Meta-Analysis",
+      "title": "Meta-analysis, PLOS ONE",
       "year": 2024,
-      "link": "https://www.cochranelibrary.com",
-      "population": "Global multi-country pooled cohort of abnormal screening follow-ups",
-      "empiricalFinding": "Multicomponent outreach OR = 3.01 (95% CI 2.45-3.70) vs single-modality outreach OR = 1.56",
+      "citation": "PLOS ONE (journals.plos.org/plosone/article?id=10.1371/journal.pone.0291931)",
+      "link": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0291931",
+      "population": "28 studies (11 RCTs, 17 observational), cervical abnormal-screen follow-up",
+      "empiricalFinding": "multicomponent OR 3.01 (95% CI 2.03-4.46) vs single 1.56 (95% CI 1.14-2.14)",
       "careLoopParameterUsage": "Parameterizes the multi-tier escalation ladder efficacy multiplier in CareLoop simulation engine",
-      "limitation": "Heterogeneity in intervention duration and varied definitions of abnormal screening results across countries."
+      "limitation": "Heterogeneity in study designs, intervention durations, and definitions of abnormal screening results across pooled international studies."
     },
     {
       "id": "SRC-2020-FIT-SURVEY",
       "type": "empirical_study",
-      "title": "Follow-up Colonoscopy Completion After Positive Fecal Immunochemical Test in Organized vs Opportunistic Screening Programmes",
+      "title": "International FIT survey",
       "year": 2020,
-      "link": "https://www.thieme-connect.com/products/ejournals/journal/10.1055/s-00000025",
-      "population": "International screening programmes across 21 countries",
-      "empiricalFinding": "Mean 79% follow-up colonoscopy within 6 months (range 39-100%); organised programmes 81% vs opportunistic 57%",
-      "careLoopParameterUsage": "Defines benchmark targets for referral completion and diagnostic colonoscopy completion rates",
-      "limitation": "Endoscopy facility availability and clinical waiting lists vary widely between jurisdictions."
+      "citation": "J Med Screen 2020 (doi: 10.1177/0969141320904977)",
+      "link": "https://doi.org/10.1177/0969141320904977",
+      "population": "35 programmes surveyed",
+      "empiricalFinding": "mean 79% colonoscopy within 6 months, range 39-100%; organised 81% vs opportunistic 57%",
+      "careLoopParameterUsage": "Establishes empirical baselines: opportunistic screening (57.0%) and organized registry screening (79.0%)",
+      "limitation": "Endoscopy facility availability, waitlists, and registry enforcement vary widely between surveyed programmes."
     },
     {
       "id": "SRC-2015-AUH-EMIR",
       "type": "empirical_study",
-      "title": "Retrospective Review of Colorectal Cancer Screening and Diagnostic Follow-Up Among UAE Nationals in Abu Dhabi",
-      "year": 2016,
-      "link": "https://doh.gov.ae/en/resources/publications",
-      "population": "Emirati citizens aged 40-75 in Abu Dhabi ambulatory care clinics",
-      "empiricalFinding": "23.5% screening FOBT uptake; 13.5% follow-up colonoscopy completion among positives",
-      "careLoopParameterUsage": "Historical Abu Dhabi baseline showing severe follow-up drop-off in the absence of active digital closed-loop tracking",
-      "limitation": "Old historical record (2015-2016) restricted to Emirati national cohort prior to Malaffi HIE deployment."
+      "title": "Abu Dhabi 2015-16",
+      "year": 2021,
+      "citation": "Almansoori et al., BMC Cancer 2021 (cited second-hand)",
+      "link": "https://bmccancer.biomedcentral.com/articles/10.1186/s12885-021-08146-2",
+      "population": "adult Emiratis in ambulatory healthcare centres",
+      "empiricalFinding": "23.5% FOBT uptake, 13.5% follow-up colonoscopy among FOBT-positive",
+      "careLoopParameterUsage": "Historical unmanaged baseline (13.5%) highlighting follow-up drop-off in the absence of active digital closed-loop tracking",
+      "limitation": "Historical 2015-2016 audit cited second-hand from Almansoori et al., BMC Cancer 2021; restricted to adult Emiratis in ambulatory healthcare centres; predates modern Malaffi HIE integration."
     }
   ],
   "assumptions": [
@@ -191,4 +197,3 @@
     }
   ]
 }
-
