@@ -29,27 +29,32 @@ describe('Phase 3: Population Analytics, Simulation Replay & Responsible AI Veri
       expect(res.scenario.baselineRate).toBe(0.135);
       expect(res.baseline.completionPercentage).toBe(13.5);
       expect(res.baseline.completedCount).toBe(270);
-      expect(res.careLoopManaged.completedCount).toBeGreaterThan(1500);
-      expect(res.delta.additionalCompletedCases).toBeGreaterThan(1200);
-      expect(res.delta.daysSavedMedian).toBeGreaterThan(50);
-      expect(res.disclaimer).toContain('SIMULATION NOTICE');
+      expect(res.defaultModel.completionPercentage).toBe(22);
+      expect(res.defaultModel.completedCount).toBe(440);
+      expect(res.optimisticModel.completionPercentage).toBe(33);
+      expect(res.optimisticModel.completedCount).toBe(660);
+      expect(res.guidelineTarget.targetPercentage).toBe(90);
+      expect(res.disclaimer).toContain('simulation under stated assumptions, not clinical effect');
     });
 
     it('models international opportunistic (medium 57%) and organized (high 79%) scenarios', () => {
       const med = runSimulationScenario('medium', 2000);
       expect(med.baseline.completionPercentage).toBe(57);
-      expect(med.careLoopManaged.completionPercentage).toBe(87.5);
+      expect(med.defaultModel.completionPercentage).toBe(65.5);
+      expect(med.optimisticModel.completionPercentage).toBe(76.5);
 
       const high = runSimulationScenario('high', 2000);
       expect(high.baseline.completionPercentage).toBe(79);
-      expect(high.careLoopManaged.completionPercentage).toBe(94.2);
+      expect(high.defaultModel.completionPercentage).toBe(87.5);
+      expect(high.optimisticModel.completionPercentage).toBe(98.5);
     });
 
     it('parameterizes RCT effect sizes from published literature', () => {
-      expect(EVIDENCE_EFFECT_SIZES.activeNavigationLift).toBe(0.085); // US RCT
+      expect(EVIDENCE_EFFECT_SIZES.activeNavigationLiftDefault).toBe(0.085); // US RCT
       expect(EVIDENCE_EFFECT_SIZES.smsAloneLift).toBe(0.0); // Tanzania RCT
-      expect(EVIDENCE_EFFECT_SIZES.telephoneNavigationLift).toBe(0.195); // Cameroon RCT
+      expect(EVIDENCE_EFFECT_SIZES.telephoneNavigationLiftOptimistic).toBe(0.195); // Cameroon RCT
       expect(EVIDENCE_EFFECT_SIZES.multiComponentOddsRatio).toBe(3.01); // Meta-Analysis
+      expect(EVIDENCE_EFFECT_SIZES.guidelineTargetRate).toBe(0.90);
     });
   });
 
@@ -114,7 +119,7 @@ describe('Phase 3: Population Analytics, Simulation Replay & Responsible AI Veri
         dateOfBirth: '1970-05-12',
         gender: 'FEMALE',
         language: 'ar',
-        phone: '+971501112233',
+        phone: '+15551112233',
         consentFlags: {
           smsConsent: true,
           whatsappConsent: true,
@@ -274,7 +279,7 @@ describe('Phase 3: Population Analytics, Simulation Replay & Responsible AI Veri
           dateOfBirth: '1985-01-01',
           gender: 'FEMALE',
           language: 'fr', // French is rare in this cohort
-          phone: '+971501112233',
+          phone: '+15551112233',
           consentFlags: {
             smsConsent: true,
             whatsappConsent: true,

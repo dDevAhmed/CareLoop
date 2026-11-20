@@ -1,17 +1,19 @@
 /**
- * CareLoop Simulation Replay Engine (Phase 3)
- * Evaluates population-level closed-loop screening outcomes across 2,000 cases
- * comparing historical/standard baselines against CareLoop active navigation.
+ * CareLoop Population Simulation Replay Engine
+ * Evaluates population-level screening follow-up outcomes across 2,000 cases
+ * comparing empirical baselines against evidence-based navigation lifts.
  *
- * All parameters derive from published RCT and epidemiological sources:
- * - SRC-2015-AUH-EMIR: 13.5% historical baseline follow-up
+ * PARAMETERIZATION SOURCES:
+ * - SRC-2015-AUH-EMIR: 13.5% historical baseline follow-up (Abu Dhabi audit)
  * - SRC-2020-FIT-SURVEY: 57.0% opportunistic vs 79.0% organized screening
- * - SRC-2023-US-RCT: +8.5% 120-day absolute navigation lift
- * - SRC-2020-TZA-SMS: SMS alone yields no significant lift (0.0%)
- * - SRC-2025-CMR-TEL: +19.5% telephone navigation lift
- * - SRC-2024-META-CERV: Multicomponent navigation OR = 3.01
+ * - SRC-2023-US-RCT: +8.5% 120-day absolute navigation lift (US cluster RCT)
+ * - SRC-2020-TZA-SMS: Standalone SMS yielded 0.0% statistically significant lift
+ * - SRC-2025-CMR-TEL: +19.5% telephone navigation lift (Cameroon RCT, optimistic upper bound)
+ * - SRC-2024-META-CERV: Multicomponent navigation OR = 3.01 (PLOS ONE 2024 meta-analysis)
  *
- * STRICT DISCLAIMER: Labeled simulation model, not individual patient clinical effect.
+ * STRICT DISCLAIMER:
+ * Simulation under stated assumptions, not clinical effect.
+ * Trial outcomes differ from our closed-loop resolution endpoint.
  */
 
 export type SimulationScenarioId = 'low' | 'medium' | 'high';
@@ -22,8 +24,6 @@ export interface ScenarioDefinition {
   sourceReference: string;
   baselineRate: number; // e.g. 0.135
   baselineRange: [number, number];
-  managedRate: number; // e.g. 0.812
-  managedRange: [number, number];
   medianDaysBaseline: number;
   medianDaysManaged: number;
   p90DaysBaseline: number;
@@ -38,8 +38,6 @@ export const SIMULATION_SCENARIOS: Record<SimulationScenarioId, ScenarioDefiniti
     sourceReference: 'SRC-2015-AUH-EMIR',
     baselineRate: 0.135,
     baselineRange: [0.11, 0.16],
-    managedRate: 0.795,
-    managedRange: [0.75, 0.83],
     medianDaysBaseline: 112,
     medianDaysManaged: 28,
     p90DaysBaseline: 240,
@@ -53,14 +51,12 @@ export const SIMULATION_SCENARIOS: Record<SimulationScenarioId, ScenarioDefiniti
     sourceReference: 'SRC-2020-FIT-SURVEY',
     baselineRate: 0.57,
     baselineRange: [0.52, 0.62],
-    managedRate: 0.875,
-    managedRange: [0.84, 0.91],
     medianDaysBaseline: 74,
     medianDaysManaged: 25,
     p90DaysBaseline: 145,
     p90DaysManaged: 42,
     description:
-      'Reflects uncoordinated private/public ambulatory networks without central registry navigation.',
+      'Reflects uncoordinated ambulatory networks without central closed-loop navigation.',
   },
   high: {
     id: 'high',
@@ -68,30 +64,42 @@ export const SIMULATION_SCENARIOS: Record<SimulationScenarioId, ScenarioDefiniti
     sourceReference: 'SRC-2020-FIT-SURVEY',
     baselineRate: 0.79,
     baselineRange: [0.75, 0.83],
-    managedRate: 0.942,
-    managedRange: [0.91, 0.96],
     medianDaysBaseline: 46,
     medianDaysManaged: 21,
     p90DaysBaseline: 82,
     p90DaysManaged: 34,
     description:
-      'Compares established organized screening cohorts to the next-generation CareLoop multi-channel closed-loop protocol.',
+      'Compares established organized screening cohorts to CareLoop multi-channel navigation.',
   },
 };
 
 export interface ParameterizedEffects {
-  activeNavigationLift: number; // +0.085 (US RCT)
+  activeNavigationLiftDefault: number; // +0.085 (US cluster RCT, 120-day)
+  telephoneNavigationLiftOptimistic: number; // +0.195 (Cameroon RCT)
   smsAloneLift: number; // 0.000 (Tanzania RCT)
-  telephoneNavigationLift: number; // +0.195 (Cameroon RCT)
-  multiComponentOddsRatio: number; // 3.01 (Cochrane Meta-Analysis)
+  multiComponentOddsRatio: number; // 3.01 (PLOS ONE 2024 meta-analysis)
+  guidelineTargetRate: number; // 0.90 (90% target, not a prediction)
 }
 
 export const EVIDENCE_EFFECT_SIZES: ParameterizedEffects = {
-  activeNavigationLift: 0.085,
+  activeNavigationLiftDefault: 0.085,
+  telephoneNavigationLiftOptimistic: 0.195,
   smsAloneLift: 0.0,
-  telephoneNavigationLift: 0.195,
   multiComponentOddsRatio: 3.01,
+  guidelineTargetRate: 0.90,
 };
+
+export interface ModelProjection {
+  label: string;
+  lift: number;
+  completionRate: number;
+  completionPercentage: number;
+  completedCount: number;
+  lostToFollowUpCount: number;
+  range: [number, number];
+  medianDaysToResolution: number;
+  p90DaysToResolution: number;
+}
 
 export interface ScenarioSimulationResult {
   scenario: ScenarioDefinition;
@@ -102,33 +110,29 @@ export interface ScenarioSimulationResult {
     completionPercentage: number;
     medianDaysToResolution: number;
     p90DaysToResolution: number;
-    estimatedAdvancedCasesIdentified: number;
   };
-  careLoopManaged: {
-    completedCount: number;
-    lostToFollowUpCount: number;
-    completionPercentage: number;
-    medianDaysToResolution: number;
-    p90DaysToResolution: number;
-    estimatedAdvancedCasesIdentified: number;
+  defaultModel: ModelProjection;
+  optimisticModel: ModelProjection;
+  // Alias for backward compatibility with UI components
+  careLoopManaged: ModelProjection;
+  guidelineTarget: {
+    targetPercentage: number;
+    targetCount: number;
+    label: string;
+    isPrediction: boolean;
   };
   delta: {
     additionalCompletedCases: number;
     absolutePercentageLift: number;
-    relativeRiskReduction: number;
     daysSavedMedian: number;
-    potentialEarlyDetectionsGained: number;
-  };
-  sensitivityRange: {
-    minProjectedCompletion: number;
-    expectedProjectedCompletion: number;
-    maxProjectedCompletion: number;
   };
   disclaimer: string;
+  endpointDifferenceNote: string;
 }
 
 /**
  * Runs a deterministic simulation comparison for a given cohort size and scenario.
+ * Evaluates baseline + lift (default +8.5%, optimistic +19.5%), and shows 90% guideline target separately.
  */
 export function runSimulationScenario(
   scenarioId: SimulationScenarioId = 'low',
@@ -139,18 +143,50 @@ export function runSimulationScenario(
   // Baseline calculations
   const baselineCompleted = Math.round(cohortSize * scenario.baselineRate);
   const baselineLost = cohortSize - baselineCompleted;
-  const baselineAdvancedIdentified = Math.round(baselineCompleted * 0.035);
 
-  // CareLoop Managed calculations
-  const managedCompleted = Math.round(cohortSize * scenario.managedRate);
-  const managedLost = cohortSize - managedCompleted;
-  const managedAdvancedIdentified = Math.round(managedCompleted * 0.035);
+  // Default lift: +0.085 (US cluster RCT, within 120 days)
+  const defaultLift = EVIDENCE_EFFECT_SIZES.activeNavigationLiftDefault;
+  const defaultRate = Math.min(1.0, scenario.baselineRate + defaultLift);
+  const defaultCompleted = Math.round(cohortSize * defaultRate);
+  const defaultLost = cohortSize - defaultCompleted;
+  const defaultRange: [number, number] = [
+    +Math.min(1.0, scenario.baselineRange[0] + defaultLift).toFixed(3),
+    +Math.min(1.0, scenario.baselineRange[1] + defaultLift).toFixed(3),
+  ];
 
-  const additionalCompleted = managedCompleted - baselineCompleted;
-  const absoluteLift = +(scenario.managedRate * 100 - scenario.baselineRate * 100).toFixed(1);
-  const rrr = +(((baselineLost - managedLost) / (baselineLost || 1)) * 100).toFixed(1);
-  const daysSaved = scenario.medianDaysBaseline - scenario.medianDaysManaged;
-  const earlyDetectionsGained = managedAdvancedIdentified - baselineAdvancedIdentified;
+  // Optimistic lift: +0.195 (Cameroon RCT)
+  const optimisticLift = EVIDENCE_EFFECT_SIZES.telephoneNavigationLiftOptimistic;
+  const optimisticRate = Math.min(1.0, scenario.baselineRate + optimisticLift);
+  const optimisticCompleted = Math.round(cohortSize * optimisticRate);
+  const optimisticLost = cohortSize - optimisticCompleted;
+  const optimisticRange: [number, number] = [
+    +Math.min(1.0, scenario.baselineRange[0] + optimisticLift).toFixed(3),
+    +Math.min(1.0, scenario.baselineRange[1] + optimisticLift).toFixed(3),
+  ];
+
+  const defaultProjection: ModelProjection = {
+    label: 'Default Model (+8.5% lift, US Cluster RCT)',
+    lift: +(defaultLift * 100).toFixed(1),
+    completionRate: defaultRate,
+    completionPercentage: +(defaultRate * 100).toFixed(1),
+    completedCount: defaultCompleted,
+    lostToFollowUpCount: defaultLost,
+    range: [+(defaultRange[0] * 100).toFixed(1), +(defaultRange[1] * 100).toFixed(1)],
+    medianDaysToResolution: scenario.medianDaysManaged,
+    p90DaysToResolution: scenario.p90DaysManaged,
+  };
+
+  const optimisticProjection: ModelProjection = {
+    label: 'Optimistic Model (+19.5% lift, Cameroon RCT)',
+    lift: +(optimisticLift * 100).toFixed(1),
+    completionRate: optimisticRate,
+    completionPercentage: +(optimisticRate * 100).toFixed(1),
+    completedCount: optimisticCompleted,
+    lostToFollowUpCount: optimisticLost,
+    range: [+(optimisticRange[0] * 100).toFixed(1), +(optimisticRange[1] * 100).toFixed(1)],
+    medianDaysToResolution: Math.max(14, scenario.medianDaysManaged - 4),
+    p90DaysToResolution: Math.max(25, scenario.p90DaysManaged - 8),
+  };
 
   return {
     scenario,
@@ -161,30 +197,24 @@ export function runSimulationScenario(
       completionPercentage: +(scenario.baselineRate * 100).toFixed(1),
       medianDaysToResolution: scenario.medianDaysBaseline,
       p90DaysToResolution: scenario.p90DaysBaseline,
-      estimatedAdvancedCasesIdentified: baselineAdvancedIdentified,
     },
-    careLoopManaged: {
-      completedCount: managedCompleted,
-      lostToFollowUpCount: managedLost,
-      completionPercentage: +(scenario.managedRate * 100).toFixed(1),
-      medianDaysToResolution: scenario.medianDaysManaged,
-      p90DaysToResolution: scenario.p90DaysManaged,
-      estimatedAdvancedCasesIdentified: managedAdvancedIdentified,
+    defaultModel: defaultProjection,
+    optimisticModel: optimisticProjection,
+    careLoopManaged: defaultProjection,
+    guidelineTarget: {
+      targetPercentage: +(EVIDENCE_EFFECT_SIZES.guidelineTargetRate * 100).toFixed(1),
+      targetCount: Math.round(cohortSize * EVIDENCE_EFFECT_SIZES.guidelineTargetRate),
+      label: 'Guideline Target (Benchmark)',
+      isPrediction: false,
     },
     delta: {
-      additionalCompletedCases: additionalCompleted,
-      absolutePercentageLift: absoluteLift,
-      relativeRiskReduction: rrr,
-      daysSavedMedian: daysSaved,
-      potentialEarlyDetectionsGained: earlyDetectionsGained,
-    },
-    sensitivityRange: {
-      minProjectedCompletion: +(scenario.managedRange[0] * 100).toFixed(1),
-      expectedProjectedCompletion: +(scenario.managedRate * 100).toFixed(1),
-      maxProjectedCompletion: +(scenario.managedRange[1] * 100).toFixed(1),
+      additionalCompletedCases: defaultCompleted - baselineCompleted,
+      absolutePercentageLift: +(defaultLift * 100).toFixed(1),
+      daysSavedMedian: scenario.medianDaysBaseline - scenario.medianDaysManaged,
     },
     disclaimer:
-      'SIMULATION NOTICE: Model outputs are statistical estimations synthesized from published cluster-randomized trials (SRC-2023-US-RCT, SRC-2025-CMR-TEL) and international registries. This simulation does not represent individual patient prognosis or certified clinical outcomes.',
+      'simulation under stated assumptions, not clinical effect',
+    endpointDifferenceNote:
+      'Note: Trial outcomes differ from our closed-loop resolution endpoint. Cited trials evaluate 120-day colonoscopy completion or attended visits; CareLoop models full closed-loop milestone tracking to diagnostic disposition.',
   };
 }
-

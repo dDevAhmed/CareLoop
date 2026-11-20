@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import {
   SimulationScenarioId,
@@ -19,15 +21,15 @@ export function SimulationView() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-xl font-extrabold text-cl-ink tracking-tight">
-            Closed-Loop Population Simulation Replay
+            Population Follow-Up Simulation Replay
           </h2>
           <p className="text-sm text-cl-muted">
-            Simulates 2,000 screening cases comparing unmanaged standard care to CareLoop active closed-loop navigation.
+            Simulates 2,000 screening cases comparing empirical baselines against navigation lifts.
           </p>
         </div>
 
         <span className="px-3 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-full text-xs font-semibold">
-          Simulation model, not individual clinical effect
+          simulation under stated assumptions, not clinical effect
         </span>
       </div>
 
@@ -69,183 +71,151 @@ export function SimulationView() {
 
       {/* Parameterized RCT Effect Sizes Reference Bar */}
       <div className="p-3 bg-cl-mist border border-cl-border rounded-cl-md space-y-2">
-        <div className="text-xs font-bold text-cl-deep-teal uppercase tracking-wider">
-          Evidence-Based RCT Parameters Powering the Simulation
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-cl-deep-teal uppercase tracking-wider">
+            Evidence-Based Trial Parameters Powering the Simulation
+          </span>
+          <span className="text-[10px] text-cl-muted italic">
+            simulation under stated assumptions, not clinical effect
+          </span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
           <div className="p-2 bg-white rounded-cl-sm border border-cl-border">
-            <div className="text-cl-muted text-[11px]">Active Navigation Lift</div>
-            <div className="font-extrabold text-cl-ink mt-0.5">+8.5% (US RCT)</div>
-            <div className="text-[10px] text-cl-teal">SRC-2023-US-RCT</div>
+            <div className="text-cl-muted text-[11px]">Default Navigation Lift</div>
+            <div className="font-extrabold text-cl-ink mt-0.5">+8.5% (US Cluster RCT)</div>
+            <div className="text-[10px] text-cl-teal">SRC-2023-US-RCT (120-day)</div>
           </div>
           <div className="p-2 bg-white rounded-cl-sm border border-cl-border">
-            <div className="text-cl-muted text-[11px]">Standalone SMS Lift</div>
-            <div className="font-extrabold text-cl-alert-text mt-0.5">0.0% (No effect)</div>
-            <div className="text-[10px] text-cl-muted">SRC-2020-TZA-SMS</div>
-          </div>
-          <div className="p-2 bg-white rounded-cl-sm border border-cl-border">
-            <div className="text-cl-muted text-[11px]">Phone Navigation Lift</div>
+            <div className="text-cl-muted text-[11px]">Optimistic Telephone Lift</div>
             <div className="font-extrabold text-cl-deep-teal mt-0.5">+19.5% (Cameroon RCT)</div>
             <div className="text-[10px] text-cl-teal">SRC-2025-CMR-TEL</div>
           </div>
           <div className="p-2 bg-white rounded-cl-sm border border-cl-border">
-            <div className="text-cl-muted text-[11px]">Multicomponent Escalation</div>
-            <div className="font-extrabold text-cl-deep-teal mt-0.5">Odds Ratio 3.01</div>
-            <div className="text-[10px] text-cl-teal">SRC-2024-META-CERV</div>
+            <div className="text-cl-muted text-[11px]">Standalone SMS Lift</div>
+            <div className="font-extrabold text-cl-muted mt-0.5">0.0% (No effect)</div>
+            <div className="text-[10px] text-cl-muted">SRC-2020-TZA-SMS</div>
+          </div>
+          <div className="p-2 bg-white rounded-cl-sm border border-cl-border">
+            <div className="text-cl-muted text-[11px]">Multicomponent Meta-Analysis</div>
+            <div className="font-extrabold text-cl-deep-teal mt-0.5">OR = 3.01 (95% CI 2.45-3.70)</div>
+            <div className="text-[10px] text-cl-teal">PLOS ONE 2024 meta-analysis</div>
           </div>
         </div>
       </div>
 
-      {/* Main Simulation Replay Head-to-Head Comparison */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Baseline (Unmanaged) Card */}
-        <div className="bg-white p-5 rounded-cl-md border border-cl-border shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-cl-border pb-3">
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-cl-alert-text">
-                Standard Care / Historical Baseline
-              </span>
-              <h3 className="text-base font-extrabold text-cl-ink mt-0.5">
-                Passive Screening (No Closed-Loop)
-              </h3>
-            </div>
-            <span className="px-2 py-0.5 rounded bg-cl-alert-tint text-cl-alert-text text-xs font-bold">
-              High Loss to Follow-Up
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-3 bg-cl-page-bg rounded-cl-sm">
-              <div className="text-xs text-cl-muted">Diagnostic Resolution</div>
-              <div className="text-2xl font-extrabold text-cl-alert-text mt-1">
-                {result.baseline.completionPercentage}%
-              </div>
-              <div className="text-[11px] text-cl-muted mt-0.5">
-                {result.baseline.completedCount} of {result.totalCohortSize} completed
-              </div>
-            </div>
-
-            <div className="p-3 bg-cl-page-bg rounded-cl-sm">
-              <div className="text-xs text-cl-muted">Lost to Follow-up</div>
-              <div className="text-2xl font-extrabold text-cl-alert-text mt-1">
-                {result.baseline.lostToFollowUpCount}
-              </div>
-              <div className="text-[11px] text-cl-muted mt-0.5">
-                Unclosed abnormal findings
-              </div>
-            </div>
-
-            <div className="p-3 bg-cl-page-bg rounded-cl-sm">
-              <div className="text-xs text-cl-muted">Median Resolution Velocity</div>
-              <div className="text-xl font-bold text-cl-ink mt-1">
-                {result.baseline.medianDaysToResolution} days
-              </div>
-              <div className="text-[11px] text-cl-muted mt-0.5">
-                P90: {result.baseline.p90DaysToResolution} days
-              </div>
-            </div>
-
-            <div className="p-3 bg-cl-page-bg rounded-cl-sm">
-              <div className="text-xs text-cl-muted">Early Neoplasia Identified</div>
-              <div className="text-xl font-bold text-cl-ink mt-1">
-                {result.baseline.estimatedAdvancedCasesIdentified}
-              </div>
-              <div className="text-[11px] text-cl-muted mt-0.5">
-                Low yield due to drop-offs
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* CareLoop Managed Card */}
-        <div className="bg-white p-5 rounded-cl-md border border-cl-deep-teal shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-cl-border pb-3">
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-cl-teal">
-                CareLoop Active Protocol
-              </span>
-              <h3 className="text-base font-extrabold text-cl-ink mt-0.5">
-                Multi-Channel Closed-Loop Navigation
-              </h3>
-            </div>
-            <span className="px-2 py-0.5 rounded bg-cl-mist text-cl-deep-teal text-xs font-bold">
-              Protected Follow-Through
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-3 bg-cl-mist rounded-cl-sm">
-              <div className="text-xs text-cl-deep-teal font-semibold">Diagnostic Resolution</div>
-              <div className="text-2xl font-extrabold text-cl-deep-teal mt-1">
-                {result.careLoopManaged.completionPercentage}%
-              </div>
-              <div className="text-[11px] text-cl-muted mt-0.5">
-                {result.careLoopManaged.completedCount} of {result.totalCohortSize} completed
-              </div>
-            </div>
-
-            <div className="p-3 bg-cl-mist rounded-cl-sm">
-              <div className="text-xs text-cl-deep-teal font-semibold">Patients Protected</div>
-              <div className="text-2xl font-extrabold text-cl-deep-teal mt-1">
-                +{result.delta.additionalCompletedCases}
-              </div>
-              <div className="text-[11px] text-cl-muted mt-0.5">
-                Rescued from drop-off
-              </div>
-            </div>
-
-            <div className="p-3 bg-cl-page-bg rounded-cl-sm">
-              <div className="text-xs text-cl-muted">Median Resolution Velocity</div>
-              <div className="text-xl font-bold text-cl-ink mt-1">
-                {result.careLoopManaged.medianDaysToResolution} days
-              </div>
-              <div className="text-[11px] text-cl-teal font-semibold mt-0.5">
-                Saved {result.delta.daysSavedMedian} days vs baseline
-              </div>
-            </div>
-
-            <div className="p-3 bg-cl-page-bg rounded-cl-sm">
-              <div className="text-xs text-cl-muted">Early Neoplasia Identified</div>
-              <div className="text-xl font-bold text-cl-ink mt-1">
-                {result.careLoopManaged.estimatedAdvancedCasesIdentified}
-              </div>
-              <div className="text-[11px] text-cl-teal font-semibold mt-0.5">
-                +{result.delta.potentialEarlyDetectionsGained} gained early
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Sensitivity Projection Ranges */}
-      <div className="bg-white p-5 rounded-cl-md border border-cl-border shadow-sm space-y-3">
+      {/* Main Simulation Replay Comparison Table & Cards */}
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-extrabold text-cl-ink">
-            Sensitivity Analysis & 95% Confidence Intervals
+            Comparative Model Outcomes (Cohort = {result.totalCohortSize} cases)
           </h3>
-          <span className="text-xs font-mono text-cl-muted">
-            Absolute Lift: +{result.delta.absolutePercentageLift}%
+          <span className="text-xs text-cl-muted italic">
+            simulation under stated assumptions, not clinical effect
           </span>
         </div>
 
-        <div className="p-3 bg-cl-page-bg rounded-cl-sm space-y-2 text-xs">
-          <div className="flex items-center justify-between font-semibold text-cl-ink">
-            <span>Conservative (Lower Bound):</span>
-            <span className="font-mono">{result.sensitivityRange.minProjectedCompletion}%</span>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Card 1: Baseline */}
+          <div className="bg-white p-4 rounded-cl-md border border-cl-border shadow-xs space-y-3">
+            <div className="border-b border-cl-border pb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-cl-alert-text">
+                Baseline (Unmanaged)
+              </span>
+              <div className="text-sm font-extrabold text-cl-ink mt-0.5">
+                {result.scenario.name}
+              </div>
+            </div>
+            <div className="text-2xl font-extrabold text-cl-alert-text">
+              {result.baseline.completionPercentage}%
+            </div>
+            <div className="text-xs text-cl-muted">
+              {result.baseline.completedCount} of {result.totalCohortSize} resolved
+            </div>
+            <div className="text-[11px] text-cl-muted border-t border-cl-border pt-2">
+              Median velocity: {result.baseline.medianDaysToResolution} days (P90: {result.baseline.p90DaysToResolution}d)
+            </div>
           </div>
-          <div className="flex items-center justify-between font-bold text-cl-deep-teal">
-            <span>Expected Point Estimate:</span>
-            <span className="font-mono text-base">{result.sensitivityRange.expectedProjectedCompletion}%</span>
+
+          {/* Card 2: Default Model (Baseline + 8.5%) */}
+          <div className="bg-white p-4 rounded-cl-md border-2 border-cl-deep-teal shadow-xs space-y-3">
+            <div className="border-b border-cl-border pb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-cl-deep-teal">
+                Default Projection (+8.5% Lift)
+              </span>
+              <div className="text-sm font-extrabold text-cl-ink mt-0.5">
+                Baseline + US Cluster RCT Lift
+              </div>
+            </div>
+            <div className="text-2xl font-extrabold text-cl-deep-teal">
+              {result.defaultModel.completionPercentage}%
+            </div>
+            <div className="text-xs text-cl-muted">
+              {result.defaultModel.completedCount} of {result.totalCohortSize} resolved
+            </div>
+            <div className="text-[11px] text-cl-ink font-semibold">
+              Range: {result.defaultModel.range[0]}% – {result.defaultModel.range[1]}%
+            </div>
+            <div className="text-[11px] text-cl-muted border-t border-cl-border pt-2">
+              Median velocity: {result.defaultModel.medianDaysToResolution} days
+            </div>
           </div>
-          <div className="flex items-center justify-between font-semibold text-cl-ink">
-            <span>Optimistic (Upper Bound):</span>
-            <span className="font-mono">{result.sensitivityRange.maxProjectedCompletion}%</span>
+
+          {/* Card 3: Optimistic Model (Baseline + 19.5%) */}
+          <div className="bg-white p-4 rounded-cl-md border border-cl-teal/60 shadow-xs space-y-3">
+            <div className="border-b border-cl-border pb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-cl-teal">
+                Optimistic (+19.5% Lift)
+              </span>
+              <div className="text-sm font-extrabold text-cl-ink mt-0.5">
+                Baseline + Cameroon RCT Lift
+              </div>
+            </div>
+            <div className="text-2xl font-extrabold text-cl-teal">
+              {result.optimisticModel.completionPercentage}%
+            </div>
+            <div className="text-xs text-cl-muted">
+              {result.optimisticModel.completedCount} of {result.totalCohortSize} resolved
+            </div>
+            <div className="text-[11px] text-cl-ink font-semibold">
+              Range: {result.optimisticModel.range[0]}% – {result.optimisticModel.range[1]}%
+            </div>
+            <div className="text-[11px] text-cl-muted border-t border-cl-border pt-2">
+              Median velocity: {result.optimisticModel.medianDaysToResolution} days
+            </div>
+          </div>
+
+          {/* Card 4: 90% Guideline Target (Benchmark, Not a Prediction) */}
+          <div className="bg-cl-page-bg p-4 rounded-cl-md border border-dashed border-cl-border space-y-3">
+            <div className="border-b border-cl-border pb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-cl-muted">
+                Guideline Target (Benchmark)
+              </span>
+              <div className="text-sm font-bold text-cl-ink mt-0.5">
+                Target Only — Not a Prediction
+              </div>
+            </div>
+            <div className="text-2xl font-extrabold text-cl-muted">
+              {result.guidelineTarget.targetPercentage}%
+            </div>
+            <div className="text-xs text-cl-muted">
+              {result.guidelineTarget.targetCount} cases (Ideal organized registry target)
+            </div>
+            <div className="text-[11px] text-amber-800 bg-amber-50 p-1.5 rounded border border-amber-200">
+              International policy target; shown separately from predictive models.
+            </div>
           </div>
         </div>
+      </div>
 
-        <p className="text-[11px] text-cl-muted leading-relaxed">
-          {result.disclaimer}
+      {/* Endpoint Difference & Assumptions Note */}
+      <div className="p-4 bg-white rounded-cl-md border border-cl-border space-y-2 text-xs">
+        <div className="font-bold text-cl-ink">Methodological Declarations & Endpoint Alignment</div>
+        <p className="text-cl-muted leading-relaxed">
+          {result.endpointDifferenceNote}
         </p>
+        <div className="pt-2 border-t border-cl-border text-[11px] text-cl-muted">
+          <strong>Citation Note:</strong> Multi-component escalation odds ratio ($3.01$, $95\%$ CI $2.45$–$3.70$) is attributed to the PLOS ONE 2024 meta-analysis on abnormal screening follow-up. Simulation values represent deterministic arithmetic models parameterized by cited trial data ($baseline + lift$).
+        </div>
       </div>
     </div>
   );

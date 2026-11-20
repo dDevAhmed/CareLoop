@@ -130,7 +130,11 @@ export default function CareLoopDashboard() {
     try {
       const res = await fetch('/api/demo-clock', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': 'ADMIN',
+          'x-user-id': 'DEMO-ADMIN-01',
+        },
         body: JSON.stringify({ advanceDays: days }),
       });
       const data = await res.json();
@@ -145,7 +149,11 @@ export default function CareLoopDashboard() {
     try {
       const res = await fetch('/api/demo-clock', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': 'ADMIN',
+          'x-user-id': 'DEMO-ADMIN-01',
+        },
         body: JSON.stringify({ reset: true }),
       });
       const data = await res.json();

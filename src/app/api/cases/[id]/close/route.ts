@@ -4,6 +4,8 @@ import { getCurrentDemoTime } from '@/services/demoClock';
 import { transitionCase } from '@/engine/stateMachine';
 import { UserRole, AuthorisedAlternativeReason } from '@/types';
 
+const VALID_ROLES = ['PATIENT', 'CLINICIAN', 'NAVIGATOR', 'PROGRAMME_ANALYST', 'ADMIN'];
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -11,12 +13,25 @@ export async function POST(
   try {
     const { id: caseId } = await params;
     const packId = request.nextUrl.searchParams.get('pack') || getActivePackId();
-    const actorRole = (request.headers.get('x-user-role') || 'CLINICIAN') as UserRole;
-    const actorId = request.headers.get('x-user-id') || 'USER-CURRENT';
+
+    // Safety fix 4(c): Fail closed on missing or invalid role
+    const rawRole = request.headers.get('x-user-role');
+    if (!rawRole || !VALID_ROLES.includes(rawRole)) {
+      return NextResponse.json({ error: 'Unauthorized: missing or invalid x-user-role' }, { status: 401 });
+    }
+    const actorRole = rawRole as UserRole;
+
+    const actorId = request.headers.get('x-user-id');
+    if (!actorId) {
+      return NextResponse.json({ error: 'Unauthorized: missing x-user-id' }, { status: 401 });
+    }
     const actorName = request.headers.get('x-user-name') || `User-${actorId}`;
 
     if (actorRole === 'PROGRAMME_ANALYST') {
       return NextResponse.json({ error: 'Forbidden: Programme Analyst role is read-only.' }, { status: 403 });
+    }
+    if (actorRole === 'PATIENT') {
+      return NextResponse.json({ error: 'Forbidden: Patient cannot close cases.' }, { status: 403 });
     }
 
     const store = getStore(packId);
@@ -25,12 +40,16 @@ export async function POST(
       return NextResponse.json({ error: 'Case not found' }, { status: 404 });
     }
 
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const { action, clinicalEvidenceRef, closureNote, reason, requesterId, requesterName, requesterRole } = body;
     const demoNow = getCurrentDemoTime();
 
     // Option A: CLINICAL_RESOLUTION
     if (action === 'CLINICAL_RESOLUTION') {
+      if (actorRole !== 'CLINICIAN') {
+        return NextResponse.json({ error: 'Forbidden: Only CLINICIAN can confirm clinical resolution.' }, { status: 403 });
+      }
+
       const evidence = clinicalEvidenceRef || caseItem.diagnosticReport?.reportId;
       if (!evidence) {
         return NextResponse.json(
@@ -53,10 +72,12 @@ export async function POST(
         },
       });
 
-      if (transResult.success) {
-        store.cases.set(caseId, transResult.updatedCase);
-        store.caseEvents.push(transResult.event);
+      if (!transResult.success) {
+        return NextResponse.json({ error: transResult.error }, { status: 400 });
       }
+
+      store.cases.set(caseId, transResult.updatedCase);
+      store.caseEvents.push(transResult.event);
 
       logAuditEvent(
         actorId,
@@ -73,8 +94,8 @@ export async function POST(
 
       return NextResponse.json({
         success: true,
-        case: caseItem,
-        closure: caseItem.closure,
+        case: transResult.updatedCase,
+        closure: transResult.updatedCase.closure,
       });
     }
 
@@ -126,6 +147,10 @@ export async function POST(
 
     // Option B, Step 2: Clinician authorises AUTHORISED_ALTERNATIVE
     if (action === 'AUTHORISE_ALTERNATIVE') {
+      if (actorRole !== 'CLINICIAN') {
+        return NextResponse.json({ error: 'Forbidden: Only CLINICIAN can authorise alternative closure.' }, { status: 403 });
+      }
+
       const pending = caseItem.pendingAlternativeClosure;
       if (!pending) {
         return NextResponse.json(
@@ -134,10 +159,13 @@ export async function POST(
         );
       }
 
-      // MANDATORY RULE: Requester and authoriser MUST be different users!
+      // Safety rule 4(b): Require requesterId and requester != authoriser
+      if (!pending.requesterId) {
+        return NextResponse.json({ error: 'Authorised alternative closure requires a named requesterId.' }, { status: 400 });
+      }
       if (pending.requesterId === actorId) {
         return NextResponse.json(
-          { error: 'Authorised alternative closure requires that the requester and authoriser be different users.' },
+          { error: 'Authorised alternative closure requires that the requester and authoriser be different users (requester !== authoriser).' },
           { status: 400 }
         );
       }
@@ -159,11 +187,13 @@ export async function POST(
         },
       });
 
-      if (transResult.success) {
-        caseItem.pendingAlternativeClosure = null;
-        store.cases.set(caseId, transResult.updatedCase);
-        store.caseEvents.push(transResult.event);
+      if (!transResult.success) {
+        return NextResponse.json({ error: transResult.error }, { status: 400 });
       }
+
+      caseItem.pendingAlternativeClosure = null;
+      store.cases.set(caseId, transResult.updatedCase);
+      store.caseEvents.push(transResult.event);
 
       logAuditEvent(
         actorId,
@@ -182,8 +212,74 @@ export async function POST(
 
       return NextResponse.json({
         success: true,
-        case: caseItem,
-        closure: caseItem.closure,
+        case: transResult.updatedCase,
+        closure: transResult.updatedCase.closure,
+      });
+    }
+
+    // Direct AUTHORISED_ALTERNATIVE closure
+    if (action === 'AUTHORISED_ALTERNATIVE') {
+      if (actorRole !== 'CLINICIAN') {
+        return NextResponse.json({ error: 'Forbidden: Only CLINICIAN can authorise alternative closure.' }, { status: 403 });
+      }
+
+      const reqId = requesterId || body.requesterId;
+      if (!reqId) {
+        return NextResponse.json({ error: 'Authorised alternative closure requires a named requesterId.' }, { status: 400 });
+      }
+      if (reqId === actorId) {
+        return NextResponse.json(
+          { error: 'Authorised alternative closure requires that the requester and authoriser be different users (requester !== authoriser).' },
+          { status: 400 }
+        );
+      }
+      if (!reason) {
+        return NextResponse.json({ error: 'Authorised alternative reason is required.' }, { status: 400 });
+      }
+
+      const transResult = transitionCase(caseItem, {
+        targetState: 'CLOSED',
+        trigger: 'AUTHORISED_ALTERNATIVE_APPROVED_BY_CLINICIAN',
+        actorId,
+        actorRole: 'CLINICIAN',
+        actorName,
+        timestamp: demoNow,
+        closureDetails: {
+          closureType: 'AUTHORISED_ALTERNATIVE',
+          authorisedReason: reason as AuthorisedAlternativeReason,
+          closureNote: closureNote || 'Authorised alternative closure confirmed.',
+          requesterId: reqId,
+          requesterName: requesterName || `User-${reqId}`,
+          requesterRole: requesterRole || 'NAVIGATOR',
+        },
+      });
+
+      if (!transResult.success) {
+        return NextResponse.json({ error: transResult.error }, { status: 400 });
+      }
+
+      store.cases.set(caseId, transResult.updatedCase);
+      store.caseEvents.push(transResult.event);
+
+      logAuditEvent(
+        actorId,
+        'CLINICIAN',
+        'CASE_CLOSED_AUTHORISED_ALTERNATIVE',
+        'Case',
+        caseId,
+        {
+          reason,
+          requesterId: reqId,
+          authoriserId: actorId,
+          closedAt: demoNow,
+        },
+        packId
+      );
+
+      return NextResponse.json({
+        success: true,
+        case: transResult.updatedCase,
+        closure: transResult.updatedCase.closure,
       });
     }
 
@@ -192,4 +288,3 @@ export async function POST(
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
-

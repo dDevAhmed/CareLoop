@@ -29,7 +29,7 @@ describe('Phase 2: Closed-Loop Screening-to-Care Platform Verification', () => {
       dateOfBirth: '1975-03-12',
       gender: 'MALE',
       language: 'en',
-      phone: '+971509998877',
+      phone: '+15559998877',
       consentFlags: {
         smsConsent: true,
         whatsappConsent: true,
@@ -193,7 +193,7 @@ describe('Phase 2: Closed-Loop Screening-to-Care Platform Verification', () => {
       dateOfBirth: '1982-05-10',
       gender: 'MALE',
       language: 'en',
-      phone: '+971501234567',
+      phone: '+15551234567',
       consentFlags: {
         smsConsent: true,
         whatsappConsent: false,
@@ -321,7 +321,7 @@ describe('Phase 2: Closed-Loop Screening-to-Care Platform Verification', () => {
       dateOfBirth: '1980-01-01',
       gender: 'FEMALE',
       language: 'en',
-      phone: '+971500000000',
+      phone: '+15550000000',
       consentFlags: {
         smsConsent: true,
         whatsappConsent: false,
@@ -343,7 +343,7 @@ describe('Phase 2: Closed-Loop Screening-to-Care Platform Verification', () => {
     const t0Demo = getCurrentDemoTime();
     const t0Wall = getWallClockTime();
 
-    expect(t0Demo).toBe('2026-08-15T09:00:00.000Z');
+    expect(t0Demo).toBe('2026-11-19T09:00:00.000Z');
     expect(t0Wall).toBeDefined();
 
     // Advance by 14 days
@@ -352,7 +352,7 @@ describe('Phase 2: Closed-Loop Screening-to-Care Platform Verification', () => {
     expect(advanced.isAdvanced).toBe(true);
 
     const t1Demo = getCurrentDemoTime();
-    expect(t1Demo).toBe('2026-08-29T09:00:00.000Z');
+    expect(t1Demo).toBe('2026-12-03T09:00:00.000Z');
 
     // Audit log stores both timestamps
     const audit = createAuditLogEntry({
