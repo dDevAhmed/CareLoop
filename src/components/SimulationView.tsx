@@ -4,16 +4,14 @@ import React, { useState } from 'react';
 import {
   SimulationScenarioId,
   SIMULATION_SCENARIOS,
-  EVIDENCE_EFFECT_SIZES,
   runSimulationScenario,
 } from '../services/simulationEngine';
 
 export function SimulationView() {
   const [selectedScenarioId, setSelectedScenarioId] = useState<SimulationScenarioId>('low');
-  const [cohortSize, setCohortSize] = useState<number>(2000);
+  const [cohortSize] = useState<number>(2000);
 
   const result = runSimulationScenario(selectedScenarioId, cohortSize);
-  const scenario = SIMULATION_SCENARIOS[selectedScenarioId];
 
   return (
     <div className="space-y-6">
@@ -83,21 +81,21 @@ export function SimulationView() {
           <div className="p-2 bg-white rounded-cl-sm border border-cl-border">
             <div className="text-cl-muted text-[11px]">Default Navigation Lift</div>
             <div className="font-extrabold text-cl-ink mt-0.5">+8.5% (US Cluster RCT)</div>
-            <div className="text-[10px] text-cl-teal">SRC-2023-US-RCT (120-day)</div>
+            <div className="text-[10px] text-cl-teal">JAMA 2023 (PubMed 37815566)</div>
           </div>
           <div className="p-2 bg-white rounded-cl-sm border border-cl-border">
             <div className="text-cl-muted text-[11px]">Optimistic Telephone Lift</div>
             <div className="font-extrabold text-cl-deep-teal mt-0.5">+19.5% (Cameroon RCT)</div>
-            <div className="text-[10px] text-cl-teal">SRC-2025-CMR-TEL</div>
+            <div className="text-[10px] text-cl-teal">Gynecol Oncol Rep 2025</div>
           </div>
           <div className="p-2 bg-white rounded-cl-sm border border-cl-border">
             <div className="text-cl-muted text-[11px]">Standalone SMS Lift</div>
-            <div className="font-extrabold text-cl-muted mt-0.5">0.0% (No effect)</div>
-            <div className="text-[10px] text-cl-muted">SRC-2020-TZA-SMS</div>
+            <div className="font-extrabold text-cl-muted mt-0.5">0.0% (RR 1.02)</div>
+            <div className="text-[10px] text-cl-muted">JMIR 2020 (no p-value claimed)</div>
           </div>
           <div className="p-2 bg-white rounded-cl-sm border border-cl-border">
             <div className="text-cl-muted text-[11px]">Multicomponent Meta-Analysis</div>
-            <div className="font-extrabold text-cl-deep-teal mt-0.5">OR = 3.01 (95% CI 2.45-3.70)</div>
+            <div className="font-extrabold text-cl-deep-teal mt-0.5">OR = 3.01 (95% CI 2.03-4.46)</div>
             <div className="text-[10px] text-cl-teal">PLOS ONE 2024 meta-analysis</div>
           </div>
         </div>
@@ -131,8 +129,9 @@ export function SimulationView() {
             <div className="text-xs text-cl-muted">
               {result.baseline.completedCount} of {result.totalCohortSize} resolved
             </div>
-            <div className="text-[11px] text-cl-muted border-t border-cl-border pt-2">
-              Median velocity: {result.baseline.medianDaysToResolution} days (P90: {result.baseline.p90DaysToResolution}d)
+            <div className="text-[11px] text-cl-muted border-t border-cl-border pt-2 space-y-0.5">
+              <div>Median velocity: {result.baseline.medianDaysToResolution} days (P90: {result.baseline.p90DaysToResolution}d)</div>
+              <div className="text-[10px] text-cl-muted italic">illustrative assumption, not evidence</div>
             </div>
           </div>
 
@@ -153,10 +152,11 @@ export function SimulationView() {
               {result.defaultModel.completedCount} of {result.totalCohortSize} resolved
             </div>
             <div className="text-[11px] text-cl-ink font-semibold">
-              Range: {result.defaultModel.range[0]}% – {result.defaultModel.range[1]}%
+              Range: {result.defaultModel.range?.[0]}% – {result.defaultModel.range?.[1]}%
             </div>
-            <div className="text-[11px] text-cl-muted border-t border-cl-border pt-2">
-              Median velocity: {result.defaultModel.medianDaysToResolution} days
+            <div className="text-[11px] text-cl-muted border-t border-cl-border pt-2 space-y-0.5">
+              <div>Median velocity: {result.defaultModel.medianDaysToResolution} days</div>
+              <div className="text-[10px] text-cl-muted italic">illustrative assumption, not evidence</div>
             </div>
           </div>
 
@@ -170,18 +170,35 @@ export function SimulationView() {
                 Baseline + Cameroon RCT Lift
               </div>
             </div>
-            <div className="text-2xl font-extrabold text-cl-teal">
-              {result.optimisticModel.completionPercentage}%
-            </div>
-            <div className="text-xs text-cl-muted">
-              {result.optimisticModel.completedCount} of {result.totalCohortSize} resolved
-            </div>
-            <div className="text-[11px] text-cl-ink font-semibold">
-              Range: {result.optimisticModel.range[0]}% – {result.optimisticModel.range[1]}%
-            </div>
-            <div className="text-[11px] text-cl-muted border-t border-cl-border pt-2">
-              Median velocity: {result.optimisticModel.medianDaysToResolution} days
-            </div>
+            {!result.optimisticModel.isApplied ? (
+              <div className="space-y-2 py-2">
+                <div className="text-2xl font-extrabold text-cl-muted italic">
+                  not applied
+                </div>
+                <div className="text-xs text-cl-muted">
+                  Optimistic lift not applied to 79.0% organized screening baseline.
+                </div>
+                <div className="text-[11px] text-cl-muted border-t border-cl-border pt-2">
+                  <span className="text-[10px] text-cl-muted italic">illustrative assumption, not evidence</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-extrabold text-cl-teal">
+                  {result.optimisticModel.completionPercentage}%
+                </div>
+                <div className="text-xs text-cl-muted">
+                  {result.optimisticModel.completedCount} of {result.totalCohortSize} resolved
+                </div>
+                <div className="text-[11px] text-cl-ink font-semibold">
+                  Range: {result.optimisticModel.range?.[0]}% – {result.optimisticModel.range?.[1]}%
+                </div>
+                <div className="text-[11px] text-cl-muted border-t border-cl-border pt-2 space-y-0.5">
+                  <div>Median velocity: {result.optimisticModel.medianDaysToResolution} days</div>
+                  <div className="text-[10px] text-cl-muted italic">illustrative assumption, not evidence</div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Card 4: 90% Guideline Target (Benchmark, Not a Prediction) */}
@@ -214,7 +231,7 @@ export function SimulationView() {
           {result.endpointDifferenceNote}
         </p>
         <div className="pt-2 border-t border-cl-border text-[11px] text-cl-muted">
-          <strong>Citation Note:</strong> Multi-component escalation odds ratio ($3.01$, $95\%$ CI $2.45$–$3.70$) is attributed to the PLOS ONE 2024 meta-analysis on abnormal screening follow-up. Simulation values represent deterministic arithmetic models parameterized by cited trial data ($baseline + lift$).
+          <strong>Citation Note:</strong> Multi-component escalation odds ratio (3.01, 95% CI 2.03–4.46) is attributed to the PLOS ONE 2024 meta-analysis on abnormal screening follow-up. Simulation values represent deterministic arithmetic models parameterized by cited trial data (baseline + lift). All projected velocities and median durations are an <em>illustrative assumption, not evidence</em>.
         </div>
       </div>
     </div>
