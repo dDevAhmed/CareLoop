@@ -11,7 +11,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const store = getStore();
 
     const queueItem = store.aiQueue.get(id);
@@ -19,8 +19,31 @@ export async function POST(
       return NextResponse.json({ error: 'Queue item not found' }, { status: 404 });
     }
 
-    const reviewerId = (request.headers.get('x-user-id') || body.reviewerId || 'NAV-01') as string;
-    const reviewerRole = (request.headers.get('x-user-role') || body.reviewerRole || 'NAVIGATOR') as UserRole;
+    // Safety rule 4(a): Require x-user-id, no default reviewer
+    const reviewerId = request.headers.get('x-user-id') || body.reviewerId;
+    if (!reviewerId || typeof reviewerId !== 'string' || reviewerId.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Reviewer ID is required (pass via x-user-id header or reviewerId body)' },
+        { status: 400 }
+      );
+    }
+
+    // Safety rule 4(a): Role must be in {CLINICIAN, NAVIGATOR}
+    const reviewerRole = (request.headers.get('x-user-role') || body.reviewerRole) as UserRole;
+    if (!reviewerRole || !['CLINICIAN', 'NAVIGATOR'].includes(reviewerRole)) {
+      return NextResponse.json(
+        { error: 'Forbidden: Reviewer must have role CLINICIAN or NAVIGATOR' },
+        { status: 403 }
+      );
+    }
+
+    // Safety rule 4(a): Only act on PENDING_REVIEW items
+    if (queueItem.status !== 'PENDING_REVIEW') {
+      return NextResponse.json(
+        { error: `Queue item cannot be approved; current status is already ${queueItem.status}` },
+        { status: 409 }
+      );
+    }
 
     const approvedItem = approveQueueItem(queueItem, reviewerId, reviewerRole, {
       modifiedContent: body.modifiedContent,
@@ -29,7 +52,7 @@ export async function POST(
 
     store.aiQueue.set(id, approvedItem);
 
-    // Record outreach attempt dispatch now that human approval has been granted!
+    // Record outreach attempt dispatch now that human approval has been granted
     const attempt = recordOutreachAttempt({
       caseId: queueItem.caseId,
       channel: 'SMS',
@@ -63,4 +86,3 @@ export async function POST(
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
 }
-

@@ -6,7 +6,7 @@ interface CsvImportViewProps {
 
 export function CsvImportView({ onImportComplete }: CsvImportViewProps) {
   const [csvText, setCsvText] = useState<string>(
-    `external_patient_id,result_id,full_name,date_of_birth,gender,language,nationality_group,emirate,phone,screening_type,screening_date,pathway_id,urgency\nDOH-99001,RES-99001,Rashid Al-Falasi,1973-04-18,MALE,ar,EMIRATI,Abu Dhabi,+971509998877,FIT_POSITIVE,2026-08-10,colorectal-uae,ROUTINE\nDOH-99002,RES-99002,Emily Watson,1981-11-05,FEMALE,en,WESTERN_EXPAT,Abu Dhabi,+971508887766,MAMMOGRAPHY_SUSPICIOUS,2026-08-11,breast-abudhabi,CRITICAL`
+    `external_patient_id,result_id,full_name,date_of_birth,gender,language,nationality_group,emirate,phone,screening_type,screening_date,pathway_id,urgency\nDOH-99001,RES-99001,Rashid Al-Falasi,1973-04-18,MALE,ar,EMIRATI,Abu Dhabi,+15559998877,FIT_POSITIVE,2026-08-10,colorectal-uae,ROUTINE\nDOH-99002,RES-99002,Emily Watson,1981-11-05,FEMALE,en,WESTERN_EXPAT,Abu Dhabi,+15558887766,MAMMOGRAPHY_SUSPICIOUS,2026-08-11,breast-abudhabi,CRITICAL`
   );
   const [importReport, setImportReport] = useState<any>(null);
   const [importing, setImporting] = useState<boolean>(false);

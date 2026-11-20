@@ -408,7 +408,7 @@ export default function PatientPwaPage() {
                     'Immediate Clinical Attention Required: Our designated screening navigation clinician is attempting to reach you by phone today.'}
                 </p>
                 <div className="bg-white p-2 rounded-xl border border-red-200 text-[11px] text-red-800">
-                  Dedicated Direct Line: <strong>+971 2 555 0199</strong> (CareLoop Urgent Triage)
+                  Dedicated Direct Line: <strong>+1 555 0199</strong> (CareLoop Urgent Triage)
                 </div>
               </div>
             )}

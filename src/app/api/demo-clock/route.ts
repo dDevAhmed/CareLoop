@@ -17,6 +17,15 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const rawRole = request.headers.get('x-user-role');
+    const ADMIN_ROLES = ['ADMIN', 'DEMO_ADMIN', 'PROGRAMME_ANALYST'];
+    if (!rawRole) {
+      return NextResponse.json({ error: 'Unauthorized: missing x-user-role' }, { status: 401 });
+    }
+    if (!ADMIN_ROLES.includes(rawRole)) {
+      return NextResponse.json({ error: 'Forbidden: Demo clock modifications restricted to admin demo role' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { advanceDays, reset } = body;
 

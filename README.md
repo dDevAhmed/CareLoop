@@ -105,43 +105,53 @@ The entire platform is covered by Vitest unit tests:
 npm test
 ```
 **Results**:
-- **11 test files passed (11/11)**
-- **48 tests passed (48/48)**
-- Execution time: ~3.5s
+- **17 test files passed (17/17)**
+- **100 tests passed (100/100)**
+- Clean execution across all domain engines, safety invariants, and synthetic seeds.
 
-Test Suites:
-1. `src/packs/jurisdictionPacks.test.ts` (5 tests):
-   - AST/text linting enforcing zero occurrences of `"UAE"`, `"Abu Dhabi"`, or `"Emirati"` inside `src/engine/`.
-   - Zod schema validation across all 3 jurisdiction packs (`abu-dhabi`, `who-reference`, `low-resource`).
-   - Cross-pack due date and overdue status divergence under different clinical deadlines.
-   - Working day calendar variations (e.g. Sunday-only vs Saturday/Sunday weekends).
-   - Dynamic health equity disparity analysis adapting to each pack's `patientGroupFields`.
-2. `src/engine/stateMachine.test.ts` (6 tests): Valid transitions, role permissions, strict closure invariants, premature closure prevention, authorized alternatives, escalation/rejection.
-3. `src/engine/slaEngine.test.ts` (7 tests): Weekend calculation, working day additions, date differences, pathway deadlines, critical urgency fast-tracks, health assessment scoring.
-4. `src/engine/outreachEngine.test.ts` (5 tests): Step-by-step ladder progression, barrier linking, call decline escalation, wrong number handling, acknowledgement completion.
-5. `src/engine/metricsEngine.test.ts` (6 tests): Age band calculation, metric summary, median/P90 resolution days, funnel attrition, barrier frequency, $<10$ case suppression.
-6. `src/engine/auditChain.test.ts` (4 tests): Genesis hash, hash continuity, payload tamper detection, broken link detection.
-7. `src/engine/csvImporter.test.ts` (3 tests): CSV parsing, row validation, duplicate rejection on composite key, import audit reporting.
-8. `src/engine/fhirConverter.test.ts` (4 tests): FHIR R4 Task, ServiceRequest, Appointment, Communication resources and licensing notice.
-9. `src/engine/aiProvider.test.ts` (3 tests): Bilingual mock generation, human approval queue enforcement, supervisor rejection.
-10. `src/scripts/seed.test.ts` (2 tests): Deterministic generation of 2,000 synthetic cases for hero pack (1,200 colorectal, 800 breast) and sample generation for WHO and low-resource packs.
-11. `src/scripts/runSeed.test.ts` (3 tests): Verification of persisted synthetic dataset files for all three packs (`abu-dhabi`, `who-reference`, `low-resource`).
+Key Test Suites:
+1. `src/tests/safety.test.ts` (13 tests): AI approve/reject security, role fail-closed (401), admin demo-clock restriction, dual-authorized alternative closure (`requesterId !== authoriserId`), small-cell suppression ($<10$), audit tampering detection, premature closure prohibition.
+2. `src/scripts/seed.test.ts` (3 tests): Deterministic generation with seed 42 anchored to `2026-11-19T09:00:00Z`; byte-identical reproducibility test; realistic state mix across 2,000 cases; gender/nationality name consistency.
+3. `src/scripts/resetStore.test.ts` (1 test): Deterministic local database baseline reset (`npm run demo:reset`).
+4. `src/tests/phase3.test.ts` (14 tests): Population analytics, simulation engine with honest evidence parameterization (+8.5% default lift, +19.5% optimistic lift, 90% guideline benchmark), pitch mode, and explainable drop-off risk score.
+5. `src/tests/phase2.test.ts` (12 tests): Happy path closed-loop, understanding check, low-bandwidth mode, referral rejection handling, governance consent blocking, demo clock advancement, RBAC patient isolation, AST jurisdiction linting.
+6. `src/packs/jurisdictionPacks.test.ts` (5 tests): Zod schema verification across Abu Dhabi, WHO Reference, and Low-Resource packs.
+7. `src/engine/stateMachine.test.ts` (6 tests): Valid state transitions, role authorizations, strict closure preconditions.
+8. `src/engine/slaEngine.test.ts` (7 tests): Working day calendar math, clinical deadlines, critical urgency fast-tracks.
+9. `src/engine/auditChain.test.ts` (4 tests): SHA-256 hash chaining, genesis anchor, payload tamper detection.
+10. `src/engine/metricsEngine.test.ts` (6 tests): 7 core indicators, funnel attrition, small-cell suppression.
+11. `src/engine/aiProvider.test.ts` (3 tests): Local mock provider, human approval queue, supervisor rejection.
+12. `src/engine/fhirConverter.test.ts` (4 tests): FHIR R4 Task, ServiceRequest, Appointment, Communication resources.
+13. `src/tests/designTokens.test.ts` (3 tests): WCAG AA contrast compliance and design token enforcement.
+14. `src/scripts/runSeed.test.ts` (3 tests): Synthetic dataset file generation into isolated temp directories.
 
 ---
 
-## 5. Getting Started
+## 5. Getting Started & Deterministic Reset
 
 ### Prerequisites
-- Node.js $\ge$ 18.x
-- npm $\ge$ 9.x
+- Node.js $\ge$ 20.x (see `.nvmrc`)
+- npm $\ge$ 10.x
 
-### Run Tests
+### Install Dependencies
+```bash
+npm ci
+```
+
+### Deterministic Seed Reset
+To return the local database store to its clean baseline state at any time:
+```bash
+npm run demo:reset
+```
+
+### Run Full Test Suite
 ```bash
 npm test
 ```
 
-### Build Production Bundle
+### Typecheck & Production Build
 ```bash
+npx tsc --noEmit
 npm run build
 ```
 
@@ -150,4 +160,19 @@ npm run build
 npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser. Toggle between **English (LTR)** and **العربية (RTL)** to inspect bilingual layout support.
+
+---
+
+## 6. Documentation Directory Index
+
+Comprehensive design, safety, and evidence documents are located in `/docs`:
+- [`docs/CASE_STATE_MODEL.md`](file:///c:/Users/a-mahmud/Documents/Personal/Hacks/Hack2Skill/CareLoop/docs/CASE_STATE_MODEL.md): Complete 13-state specification, transition matrix, role permissions, and closure rules.
+- [`docs/DATA_AND_ASSUMPTIONS_DECLARATION.md`](file:///c:/Users/a-mahmud/Documents/Personal/Hacks/Hack2Skill/CareLoop/docs/DATA_AND_ASSUMPTIONS_DECLARATION.md): Complete declaration of synthetic data hygiene, literature parameters, effect lifts, and limitations.
+- [`docs/PILOT_PATH.md`](file:///c:/Users/a-mahmud/Documents/Personal/Hacks/Hack2Skill/CareLoop/docs/PILOT_PATH.md): 4-phase clinical adoption roadmap for health authorities and hospital networks.
+- [`docs/DEMO_SCRIPT.md`](file:///c:/Users/a-mahmud/Documents/Personal/Hacks/Hack2Skill/CareLoop/docs/DEMO_SCRIPT.md): Step-by-step walkthrough for evaluators, presenters, and clinical auditors.
+- [`docs/SUBMISSION_CHECKLIST.md`](file:///c:/Users/a-mahmud/Documents/Personal/Hacks/Hack2Skill/CareLoop/docs/SUBMISSION_CHECKLIST.md): Official competition verification matrix and compliance audit.
+- [`docs/SIMULATION_REPORT.md`](file:///c:/Users/a-mahmud/Documents/Personal/Hacks/Hack2Skill/CareLoop/docs/SIMULATION_REPORT.md): Population simulation methodology, baseline comparisons, and honesty notices.
+- [`docs/SAFETY_AND_ESCALATION.md`](file:///c:/Users/a-mahmud/Documents/Personal/Hacks/Hack2Skill/CareLoop/docs/SAFETY_AND_ESCALATION.md): Clinical escalation protocols, SLA countdowns, and dual authorization.
+- [`docs/ARCHITECTURE.md`](file:///c:/Users/a-mahmud/Documents/Personal/Hacks/Hack2Skill/CareLoop/docs/ARCHITECTURE.md): System architecture, Mermaid data-flow diagram, and FHIR R4 mapping.
+- [`docs/LIMITATIONS.md`](file:///c:/Users/a-mahmud/Documents/Personal/Hacks/Hack2Skill/CareLoop/docs/LIMITATIONS.md): Operational boundaries, prototype scope, and identity simulation notices.
 

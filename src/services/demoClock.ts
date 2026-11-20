@@ -15,7 +15,7 @@ export interface DemoClockState {
 // Global in-memory singleton
 let clockState = {
   offsetDays: 0,
-  baseDate: '2026-08-15T09:00:00.000Z',
+  baseDate: '2026-11-19T09:00:00.000Z',
 };
 
 /**

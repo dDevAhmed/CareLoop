@@ -52,7 +52,7 @@ export function WorklistView({
     return cases
       .filter((c) => c.currentState !== 'CLOSED')
       .map((c, index) => {
-        const phone = c.patient?.phone || '+971501234417';
+        const phone = c.patient?.phone || '+15551234417';
         const phoneEnding = phone.slice(-4);
         const langLabel = c.patient?.language === 'ar' ? 'Arabic' : 'English';
         const isOverdue = c.isOverdue;

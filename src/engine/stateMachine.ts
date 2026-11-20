@@ -67,6 +67,14 @@ const ALLOWED_TRANSITIONS: Record<CaseState, CaseState[]> = {
 };
 
 /**
+ * Checks if a transition between two states is structurally allowed
+ */
+export function isValidTransition(from: CaseState, to: CaseState): boolean {
+  const allowed = ALLOWED_TRANSITIONS[from];
+  return !!allowed && allowed.includes(to);
+}
+
+/**
  * Roles permitted to perform specific transitions
  */
 const ROLE_PERMISSIONS: Partial<Record<CaseState, UserRole[]>> = {

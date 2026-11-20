@@ -1,121 +1,102 @@
-# CareLoop Population Simulation Replay Report (Phase 3)
+# CareLoop Population Simulation Replay Report
+
+> **STRICT DISCLAIMER**:
+> **simulation under stated assumptions, not clinical effect.**
+> Model outputs represent mathematical arithmetic estimations synthesized from published cluster-randomized trials (`SRC-2023-US-RCT`, `SRC-2025-CMR-TEL`) and screening audits (`SRC-2015-AUH-EMIR`, `SRC-2020-FIT-SURVEY`). Trial outcomes differ from our closed-loop resolution endpoint (e.g. 120-day colonoscopy completion vs 45-day closed-loop clinical resolution). These outputs do not constitute certified clinical effect or individual patient prognosis.
+
+---
 
 ## 1. Executive Summary & Model Overview
 
-To quantify the population-health impact of closed-loop active navigation compared to unmanaged opportunistic screening, CareLoop incorporates a deterministic population replay engine (`src/services/simulationEngine.ts`). 
+CareLoop incorporates a deterministic population replay engine (`src/services/simulationEngine.ts`) to illustrate the arithmetic impact of active navigation versus passive unmanaged screening across a cohort of **2,000 synthetic patients**.
 
-The simulation models a cohort of **2,000 synthetic patients** with actionable abnormal screening results (positive FIT colorectal screening or suspicious mammography findings) across three baseline epidemiological scenarios derived from peer-reviewed publications.
+Rather than utilizing hardcoded managed rates, CareLoop models managed follow-through as:
+$$\text{Managed Rate} = \text{Baseline Rate} + \text{Evidence-Based Lift}$$
 
-> **CRITICAL DISCLAIMER**:
-> This report details statistical projections synthesized from published cluster-randomized trials (SRC-2023-US-RCT, SRC-2025-CMR-TEL) and international screening audits. The outputs represent population-level mathematical estimations and **do not constitute certified clinical effect or individual patient prognosis**.
+Two evidence-grounded models are computed alongside an independent policy target:
+1. **Default Model (+8.5% lift)**: Based on the US cluster RCT (`SRC-2023-US-RCT`) evaluating EHR reminders with active navigation within 120 days.
+2. **Optimistic Model (+19.5% lift)**: Based on the Cameroon telephone navigation RCT (`SRC-2025-CMR-TEL`).
+3. **Guideline Target (90.0%)**: Policy benchmark for organized registries; displayed strictly as a benchmark, **never as a prediction**.
 
 ---
 
 ## 2. Baseline Epidemiological Scenarios
 
-| Scenario ID | Baseline Name | Empirical Source Reference | Baseline Follow-Up Rate | CareLoop Managed Rate | Median Days to Resolution (Base vs Managed) | P90 Days to Resolution (Base vs Managed) |
+| Scenario ID | Baseline Name | Empirical Source Reference | Baseline Follow-Up Rate | Baseline 95% Range | Median Days (Baseline) | P90 Days (Baseline) |
 |---|---|---|---|---|---|---|
-| **`low`** | Historical Abu Dhabi Baseline (2015-2016) | `SRC-2015-AUH-EMIR` | **13.5%** | **79.5%** | 112 days → **28 days** | 240 days → **54 days** |
-| **`medium`** | International Opportunistic Screening | `SRC-2020-FIT-SURVEY` | **57.0%** | **87.5%** | 74 days → **25 days** | 145 days → **42 days** |
-| **`high`** | International Organized Screening Registry | `SRC-2020-FIT-SURVEY` | **79.0%** | **94.2%** | 46 days → **21 days** | 82 days → **34 days** |
+| **`low`** | Historical Abu Dhabi Baseline (2015-2016) | `SRC-2015-AUH-EMIR` | **13.5%** | [11.0%, 16.0%] | 112 days | 240 days |
+| **`medium`** | International Opportunistic Screening | `SRC-2020-FIT-SURVEY` | **57.0%** | [52.0%, 62.0%] | 74 days | 145 days |
+| **`high`** | International Organized Screening Registry | `SRC-2020-FIT-SURVEY` | **79.0%** | [75.0%, 83.0%] | 46 days | 82 days |
 
 ---
 
-## 3. Parameterized RCT Effect Sizes
+## 3. Parameterized Trial Effect Sizes
 
-CareLoop models transition lifts using exact effect sizes extracted from randomized controlled trials:
-
-1. **Active Patient Navigation (`SRC-2023-US-RCT`)**:
+1. **Default Active Navigation Lift (`SRC-2023-US-RCT`)**:
    - Primary Endpoint: 120-day diagnostic resolution.
-   - Usual Care: $22.9\%$ vs. Navigation Arm: $31.4\%$.
-   - **Absolute Uplift**: $+8.5\%$ ($p < 0.001$).
-2. **Standalone Text Messaging (`SRC-2020-TZA-SMS`)**:
-   - Primary Endpoint: Screening follow-up attendance.
-   - SMS Arm: $24.0\%$ vs. Control: $23.8\%$ ($p = 0.89$).
-   - **Effect Size**: $0.0\%$ (No statistically significant impact from standalone SMS without human navigation).
-3. **Telephone Voice Navigation (`SRC-2025-CMR-TEL`)**:
+   - Usual Care: $22.9\%$ vs Navigation: $31.4\%$.
+   - **Absolute Uplift Applied**: $+8.5\%$ (Default model).
+2. **Optimistic Telephone Voice Navigation (`SRC-2025-CMR-TEL`)**:
    - Primary Endpoint: Confirmatory diagnostic follow-up.
-   - Standard Routine Notice: $6.1\%$ vs. Phone Navigation Arm: $25.6\%$.
-   - **Step-Up Uplift**: $+19.5\%$ (Odds Ratio $\approx 5.3$).
+   - Routine Notification: $6.1\%$ vs Phone Navigation: $25.6\%$.
+   - **Absolute Uplift Applied**: $+19.5\%$ (Optimistic model).
+3. **Standalone Text Messaging (`SRC-2020-TZA-SMS`)**:
+   - Primary Endpoint: Screening follow-up attendance.
+   - SMS: $24.0\%$ vs Control: $23.8\%$.
+   - **Effect Size Applied**: $0.0\%$ (Standalone SMS provides no statistically measurable lift without human escalation).
 4. **Multicomponent Escalation Ladder (`SRC-2024-META-CERV`)**:
-   - Systematic Review & Meta-Analysis of 48 trials.
-   - Single-Modality Reminder: $\text{OR} = 1.56$.
-   - Multicomponent Escalation (SMS + Phone + Navigator + Clinician): **$\text{OR} = 3.01$** ($95\%\text{ CI } 2.45 - 3.70$).
+   - **Citation**: PLOS ONE 2024 meta-analysis on multicomponent abnormal screening follow-up.
+   - Single-modality reminder: $\text{OR} = 1.56$.
+   - Multicomponent escalation (SMS + Phone + Navigator + Clinician): **$\text{OR} = 3.01$** ($95\%\text{ CI } 2.45 - 3.70$).
+   - Used qualitatively to substantiate the four-tier outreach ladder.
 
 ---
 
 ## 4. Head-to-Head Comparative Outcomes (Cohort = 2,000 Cases)
 
+*Label: simulation under stated assumptions, not clinical effect.*
+
 ### Scenario A: Historical Baseline (`low` — Abu Dhabi 2015-2016)
-- **Standard Baseline**:
-  - Completed Diagnostic Resolution: **270 cases** ($13.5\%$)
-  - Lost to Follow-Up / Unclosed: **1,730 cases** ($86.5\%$)
-  - Median Days to Resolution: **112 working days**
-  - Advanced Neoplasia Detected Early: $\approx 9$ cases
-- **CareLoop Managed**:
-  - Completed Diagnostic Resolution: **1,590 cases** ($79.5\%$)
-  - Lost to Follow-Up / Unclosed: **410 cases** ($20.5\%$)
-  - Median Days to Resolution: **28 working days**
-  - Advanced Neoplasia Detected Early: $\approx 56$ cases
-- **CareLoop Clinical Delta**:
-  - Additional Patients Rescued from Drop-Off: **$+1,320$ patients**
-  - Absolute Percentage Lift: **$+66.0\%$**
-  - Relative Risk Reduction of Loss-to-Follow-Up: **$76.3\%$**
-  - Median Working Days Saved: **$84$ days**
-  - Potential Early Malignancies / Advanced Polyps Gained: **$+47$ patients**
+- **Baseline (Unmanaged, 13.5%)**:
+  - Resolved: **270 cases** ($13.5\%$)
+  - Lost to follow-up: **1,730 cases** ($86.5\%$)
+  - Median days to resolution: **112 working days**
+- **Default Model (Baseline + 8.5% lift)**:
+  - Resolved: **440 cases** ($22.0\%$) | Range: $19.5\% - 24.5\%$
+  - Additional resolved: **+170 cases**
+  - Median days to resolution: **28 working days**
+- **Optimistic Model (Baseline + 19.5% lift)**:
+  - Resolved: **660 cases** ($33.0\%$) | Range: $30.5\% - 35.5\%$
+  - Additional resolved: **+390 cases**
+- **Guideline Benchmark (Target Only, Not Prediction)**: **1,800 cases** ($90.0\%$).
+
+### Scenario B: International Opportunistic Screening (`medium` — 57.0%)
+- **Baseline (Unmanaged, 57.0%)**:
+  - Resolved: **1,140 cases** ($57.0\%$)
+  - Lost to follow-up: **860 cases** ($43.0\%$)
+- **Default Model (Baseline + 8.5% lift)**:
+  - Resolved: **1,310 cases** ($65.5\%$) | Range: $60.5\% - 70.5\%$
+  - Additional resolved: **+170 cases**
+- **Optimistic Model (Baseline + 19.5% lift)**:
+  - Resolved: **1,530 cases** ($76.5\%$) | Range: $71.5\% - 81.5\%$
+  - Additional resolved: **+390 cases**
+- **Guideline Benchmark (Target Only, Not Prediction)**: **1,800 cases** ($90.0\%$).
+
+### Scenario C: International Organized Registry (`high` — 79.0%)
+- **Baseline (Unmanaged, 79.0%)**:
+  - Resolved: **1,580 cases** ($79.0\%$)
+  - Lost to follow-up: **420 cases** ($21.0\%$)
+- **Default Model (Baseline + 8.5% lift)**:
+  - Resolved: **1,750 cases** ($87.5\%$) | Range: $83.5\% - 91.5\%$
+  - Additional resolved: **+170 cases**
+- **Optimistic Model (Baseline + 19.5% lift)**:
+  - Resolved: **1,970 cases** ($98.5\%$) | Range: $94.5\% - 100.0\%$
+  - Additional resolved: **+390 cases**
+- **Guideline Benchmark (Target Only, Not Prediction)**: **1,800 cases** ($90.0\%$).
 
 ---
 
-### Scenario B: International Opportunistic Screening (`medium`)
-- **Standard Baseline**:
-  - Completed Diagnostic Resolution: **1,140 cases** ($57.0\%$)
-  - Lost to Follow-Up: **860 cases** ($43.0\%$)
-- **CareLoop Managed**:
-  - Completed Diagnostic Resolution: **1,750 cases** ($87.5\%$)
-  - Lost to Follow-Up: **250 cases** ($12.5\%$)
-- **CareLoop Clinical Delta**:
-  - Additional Patients Rescued: **$+610$ patients**
-  - Absolute Percentage Lift: **$+30.5\%$**
-  - Median Working Days Saved: **$49$ days**
+## 5. Methodological Limits & Endpoint Alignment
 
----
-
-### Scenario C: International Organized Registry (`high`)
-- **Standard Baseline**:
-  - Completed Diagnostic Resolution: **1,580 cases** ($79.0\%$)
-  - Lost to Follow-Up: **420 cases** ($21.0\%$)
-- **CareLoop Managed**:
-  - Completed Diagnostic Resolution: **1,884 cases** ($94.2\%$)
-  - Lost to Follow-Up: **116 cases** ($5.8\%$)
-- **CareLoop Clinical Delta**:
-  - Additional Patients Rescued: **$+304$ patients**
-  - Absolute Percentage Lift: **$+15.2\%$**
-  - Median Working Days Saved: **$25$ days**
-
----
-
-## 5. Sensitivity Analysis (95% Confidence Bounds)
-
-```
-Scenario Low (Historical Baseline 13.5%):
-  Lower Bound (Conservative):     [=================== 75.0% ]
-  Expected Point Estimate:        [==================== 79.5% ]
-  Upper Bound (Optimistic):       [====================== 83.0% ]
-
-Scenario Medium (Opportunistic 57.0%):
-  Lower Bound (Conservative):     [===================== 84.0% ]
-  Expected Point Estimate:        [====================== 87.5% ]
-  Upper Bound (Optimistic):       [======================= 91.0% ]
-
-Scenario High (Organized 79.0%):
-  Lower Bound (Conservative):     [======================= 91.0% ]
-  Expected Point Estimate:        [======================== 94.2% ]
-  Upper Bound (Optimistic):       [========================= 96.0% ]
-```
-
----
-
-## 6. Conclusion
-
-The simulation results substantiate CareLoop's core thesis: **standalone digital reminders fail to achieve screening resolution without structured human escalation**. By pairing automated multi-channel nudges with prioritized health navigation, facility rejection interception, and transparent drop-off risk triage, CareLoop delivers a statistically validated **$+15.2\%$ to $+66.0\%$ lift** in completed diagnostic resolutions across diverse healthcare delivery environments.
-
+- **Endpoint Disparity**: The cited RCTs measured varying intermediate milestones: `SRC-2023-US-RCT` evaluated colonoscopy completion within 120 calendar days; `SRC-2025-CMR-TEL` measured attendance at initial referral clinics. CareLoop's operational endpoint is **closed-loop clinical resolution** within configured SLA working days (e.g. 45 working days).
+- **Population Transferability**: Parameters originate in health systems outside the UAE (US community health centers, Cameroon clinics). UAE-specific factors (e.g. Thiqa/Enaya coverage, high mobile penetration) may alter baseline inertia and response rates.
