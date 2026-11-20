@@ -43,6 +43,8 @@ export default function CareLoopDashboard() {
   // Data state
   const [cases, setCases] = useState<Case[]>([]);
   const [outreachAttempts, setOutreachAttempts] = useState<OutreachAttempt[]>([]);
+  const [outreachLoading, setOutreachLoading] = useState<boolean>(true);
+  const [outreachError, setOutreachError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [aiQueueCount, setAiQueueCount] = useState<number>(0);
@@ -59,6 +61,7 @@ export default function CareLoopDashboard() {
 
   useEffect(() => {
     fetchCases();
+    fetchOutreachAttempts();
   }, [activePackId]);
 
   async function fetchPacks() {
@@ -111,6 +114,28 @@ export default function CareLoopDashboard() {
       console.error('Failed to load cases', err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchOutreachAttempts() {
+    setOutreachLoading(true);
+    setOutreachError(null);
+    try {
+      const res = await fetch(`/api/outreach?pack=${encodeURIComponent(activePackId)}`);
+      if (!res.ok) {
+        throw new Error(`Outreach request failed: HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (!Array.isArray(data.attempts)) {
+        throw new Error('The outreach response did not contain an attempts list.');
+      }
+      setOutreachAttempts(data.attempts);
+    } catch (err) {
+      console.error('Failed to load outreach attempts', err);
+      setOutreachAttempts([]);
+      setOutreachError('Outreach activity could not be loaded. Please refresh the page to try again.');
+    } finally {
+      setOutreachLoading(false);
     }
   }
 
@@ -279,6 +304,8 @@ export default function CareLoopDashboard() {
             <OutreachView
               attempts={outreachAttempts}
               activePack={activePack}
+              loading={outreachLoading}
+              error={outreachError}
             />
           )}
 

@@ -185,6 +185,7 @@ export function Sidebar({
           return (
             <button
               key={item.id}
+              title={item.id === 'outreach' ? `${item.count ?? 0} cases awaiting patient acknowledgement` : undefined}
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-cl-sm transition-colors text-left ${
                 isActive
