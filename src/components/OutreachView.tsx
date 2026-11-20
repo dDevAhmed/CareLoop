@@ -5,9 +5,14 @@ import { formatHumanLabel } from '../utils/formatters';
 interface OutreachViewProps {
   attempts: OutreachAttempt[];
   activePack: JurisdictionPack | null;
+  loading: boolean;
+  error: string | null;
 }
 
-export function OutreachView({ attempts, activePack }: OutreachViewProps) {
+export function OutreachView({ attempts, activePack, loading, error }: OutreachViewProps) {
+  const recentAttempts = [...attempts]
+    .sort((a, b) => new Date(b.attemptedAt).getTime() - new Date(a.attemptedAt).getTime())
+    .slice(0, 25);
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -71,14 +76,26 @@ export function OutreachView({ attempts, activePack }: OutreachViewProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-cl-border font-mono text-[11px]">
-              {attempts.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-cl-muted font-sans text-xs" role="status">
+                    Loading outreach activity…
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-cl-alert-text font-sans text-xs" role="alert">
+                    {error}
+                  </td>
+                </tr>
+              ) : recentAttempts.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-cl-muted font-sans text-xs">
-                    No outreach attempts recorded yet.
+                    No outreach attempts recorded for this jurisdiction pack.
                   </td>
                 </tr>
               ) : (
-                attempts.slice(-25).reverse().map((att) => (
+                recentAttempts.map((att) => (
                   <tr key={att.id} className="hover:bg-cl-page-bg/40 font-sans">
                     <td className="py-2 px-3 font-mono font-bold text-cl-ink">{att.caseId}</td>
                     <td className="py-2 px-3">
